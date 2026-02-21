@@ -186,7 +186,7 @@ function HomePage() {
 }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [, setToken] = useState(localStorage.getItem("token") || "");
 
   // Keep token in sync with localStorage
   useEffect(() => {

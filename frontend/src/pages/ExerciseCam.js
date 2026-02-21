@@ -116,13 +116,12 @@ const ML_EXERCISE_CONFIG = {
   }, [voiceEnabled]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (instruction) speak(instruction);
   }, [instruction, speak]);
 
   // Setup MediaPipe Pose
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     const pose = new poseDetection.Pose({
       locateFile: (file) =>
         `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
@@ -164,7 +163,7 @@ const ML_EXERCISE_CONFIG = {
         console.warn("Error closing pose:", e);
       }
     };
-  }, [exercise]);
+  }, [exercise]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onResults = (results) => {
     // Guard against missing canvas or image (can happen if component unmounted)
