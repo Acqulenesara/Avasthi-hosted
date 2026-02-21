@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "../styles/Login.css";
-import Signup from "./Signup";
 import logo from "../assets/logo.png";
 import character from "../assets/character.png";
 

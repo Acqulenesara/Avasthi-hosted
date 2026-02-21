@@ -11,6 +11,7 @@ export default function MealCard({ meal, index, minScore, maxScore }) {
 
   displayScore = Math.round(displayScore);
 
+  // eslint-disable-next-line no-unused-vars
   const badgeClass =
     displayScore >= 90 ? "high" :
     displayScore >= 80 ? "mid" : "low";

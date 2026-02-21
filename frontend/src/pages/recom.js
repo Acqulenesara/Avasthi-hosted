@@ -27,6 +27,7 @@ export default function Recom() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (username) {
       console.log("📡 Fetching recommendations for:", username);

@@ -627,6 +627,7 @@ if (standing) {
         clearInterval(holdIntervalRef.current);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holding, resting, poseCorrect, exercise]);
 
   useEffect(() => {
@@ -673,7 +674,7 @@ if (standing) {
         clearInterval(breakIntervalRef.current);
       }
     };
-  }, [resting, exercise]); 
+  }, [resting, exercise]);
 
   const handleExerciseChange = (newExercise) => {
     if (holdIntervalRef.current) {
@@ -715,6 +716,7 @@ useEffect(() => {
     speak(correction);
     lastCorrectionRef.current = correction;
   }
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [correction]);
 
   return (

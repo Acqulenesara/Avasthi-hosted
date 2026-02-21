@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Signup.css";
-import PSSQuestionnaire from "./pssquestionnaire";
 import logo from "../assets/logo.png";
 import character from "../assets/character.png";
 
