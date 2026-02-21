@@ -188,6 +188,12 @@ function HomePage() {
 function App() {
   const [, setToken] = useState(localStorage.getItem("token") || "");
 
+  // Ping backend on app load to wake up Render free tier
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/docs`, { method: 'GET' })
+      .catch(() => {}); // silently ignore errors - just waking up the server
+  }, []);
+
   // Keep token in sync with localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
