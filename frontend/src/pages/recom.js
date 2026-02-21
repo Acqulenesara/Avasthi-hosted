@@ -30,7 +30,7 @@ export default function Recom() {
   const fetchRecs = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://127.0.0.1:8000/recommendations/?username=${username}&top_k=8`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/recommendations/?username=${username}&top_k=8`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export default function Recom() {
   const handleFeedback = async (activity_title, liked = true) => {
     try {
       const token = localStorage.getItem("token");
-      await fetch("http://127.0.0.1:8000/feedback", {
+      await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/feedback`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
