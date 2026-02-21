@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 import nltk
 from fastapi.middleware.cors import CORSMiddleware
@@ -319,7 +319,7 @@ def get_embedding(text: str) -> list[float]:
         return []
 
 # Function to retrieve similar documents from ChromaDB
-def search_similar_text(query_text, top_k=10, score_threshold=0.8):
+def search_similar_text(query_text, top_k=5, score_threshold=0.3):
     query_vector = get_embedding(query_text)
 
     if not query_vector:
@@ -446,23 +446,22 @@ async def get_conversation_history(username: str, limit: int = 10) -> list[dict]
 
 
 @app.post("/query")
-async def handle_query(payload: QueryPayload, token: str = Depends(oauth2_scheme)):
+async def handle_query(payload: QueryPayload, background_tasks: BackgroundTasks, token: str = Depends(oauth2_scheme)):
     try:
+        import asyncio
         username = extract_username_from_token(token)
         query = payload.query
 
-        # 1. Retrieve context and analyze sentiment (Your existing logic is fine)
-        retrieved_context = search_similar_text(query)
-        sentiment = analyze_sentiment_transformers(query)
-        context = extract_context_from_text(query)
-        scenario = context.get("scenario", "unknown")
-        role = context.get("role", "user")
+        loop = asyncio.get_event_loop()
 
-        # 2. Build dynamic instructions (Your existing logic is fine)
+        # 1. Sentiment is fast (local model), run directly
+        sentiment = analyze_sentiment_transformers(query)
+
+        # 2. Build instructions
         sentiment_instruction = {
             "positive": "Maintain an engaging and encouraging tone.",
             "neutral": "Respond normally with helpful advice.",
-            "negative": "Keep it under 7 sentences. Use a compassionate tone. End with a short coping tip. Offer stress-relief tips briefly. Keep it short."
+            "negative": "Keep it under 7 sentences. Use a compassionate tone. End with a short coping tip. Keep it short."
         }.get(sentiment, "Respond normally. Be concise and to the point.")
 
         interaction_count_query = "SELECT COUNT(*) FROM interactions WHERE username = :username"
@@ -470,93 +469,103 @@ async def handle_query(payload: QueryPayload, token: str = Depends(oauth2_scheme
 
         if interaction_count <= 10:
             sentiment_instruction += (
-                " Feel free to ask light, subtle questions about their lifestyle, hobbies, or stress relief routines. "
-                "Keep it conversational, not like a survey."
+                " Ask one gentle question about their lifestyle or stress relief habits."
             )
 
         instructions = (
-            f"You are Arohi, a compassionate mental health assistant for user {username}. "
-            f"Scenario: {scenario}. Role: {role}. Tone: {sentiment}.\n"
-            f"{sentiment_instruction}"
+            f"You are Aarohi, a compassionate mental health assistant. "
+            f"Tone: {sentiment}.\n{sentiment_instruction}"
         )
 
-        # 3. Fetch past conversation history
-        conversation_history = await get_conversation_history(username, limit=10)
+        # 3. Fetch conversation history (fast DB call)
+        conversation_history = await get_conversation_history(username, limit=6)
 
-        # 4. Construct the full message list for Groq
+        # 4. Pinecone search in thread (sync call, don't block event loop)
+        retrieved_context = await loop.run_in_executor(None, search_similar_text, query)
+
+        # 5. Build messages and call LLM (single blocking call, run in thread)
         messages = [{"role": "system", "content": instructions}]
-        messages.extend(conversation_history)  # <-- Add past messages
-
-        # Add the new user query (with context)
+        messages.extend(conversation_history)
         messages.append({
             "role": "user",
-            "content": f"Context:\n{retrieved_context}\n\nQuery: {query}"
+            "content": f"Context:\n{retrieved_context}\n\nUser: {query}"
         })
 
-        # 5. Call Groq Llama
-        response_text = llama_chat(messages)
+        response_text = await loop.run_in_executor(None, lambda: llama_chat(messages))
 
-        # 6. Save the new interaction to the database (This logic was in your OpenAI block)
-        try:
-            insert_query = """
-                INSERT INTO interactions (username, query, response, scenario, timestamp)
-                VALUES (:username, :query, :response, :scenario, :timestamp)
-            """
-            await database.execute(query=insert_query, values={
-                "username": username,
-                "query": query,
-                "response": response_text,
-                "scenario": scenario,  # Use the scenario extracted earlier
-                "timestamp": datetime.utcnow().isoformat()
-            })
-        except Exception as db_err:
-            print(f"❌ Failed to save interaction: {db_err}")
+        # 6. Save to DB and extract preferences IN THE BACKGROUND after responding
+        background_tasks.add_task(
+            _save_interaction_background,
+            username, query, response_text, conversation_history
+        )
 
-        # 7. Extract and save preferences (This logic was also in your OpenAI block)
-        try:
-            # Create the full conversation including the latest exchange
-            full_conversation = conversation_history + [
-                {"role": "user", "content": query},
-                {"role": "assistant", "content": response_text}
-            ]
-
-            preferences, extracted_scenario = extract_preferences_from_chat(full_conversation)
-
-            # (Optional) You might want to update the interaction's scenario
-            # with the one extracted_scenario if it's more accurate.
-
-            for pref in preferences:
-                try:
-                    await database.execute(
-                        query="""
-                            INSERT INTO user_preferences (username, preference_type, content)
-                            VALUES (:username, :preference_type, :content)
-                            ON CONFLICT DO NOTHING
-                        """,
-                        values={
-                            "username": username,
-                            "preference_type": pref.get("type", "like"),
-                            "content": pref.get("content", "")
-                        }
-                    )
-                except Exception as db_pref_err:
-                    print(f"❌ Failed to insert preference: {db_pref_err}")
-
-        except Exception as pref_err:
-            print(f"❌ Failed to extract preferences: {pref_err}")
-
-        # 8. Return the response
-        # We use a dummy thread_id "llama" as your frontend might expect it.
-        # The line `return {"thread_id": current_thread_id, "response": response_text}`
-        # is what caused the NameError. You can safely delete it.
         return {"thread_id": "llama", "response": response_text}
-
 
     except Exception as e:
         import traceback
         print("❌ Error in /query:")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
+
+
+async def _save_interaction_background(username: str, query: str, response_text: str, conversation_history: list):
+    """Runs AFTER the response is already sent — saves interaction + preferences to DB."""
+    import asyncio
+    loop = asyncio.get_running_loop()
+
+    # Determine scenario without blocking main request
+    try:
+        context = await loop.run_in_executor(None, lambda: extract_context_from_text(query))
+        scenario = context.get("scenario", "unknown")
+    except Exception:
+        scenario = "unknown"
+
+    # Save the interaction
+    try:
+        await database.execute(
+            query="""
+                INSERT INTO interactions (username, query, response, scenario, timestamp)
+                VALUES (:username, :query, :response, :scenario, :timestamp)
+            """,
+            values={
+                "username": username,
+                "query": query,
+                "response": response_text,
+                "scenario": scenario,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
+        print(f"✅ Saved interaction for {username}")
+    except Exception as db_err:
+        print(f"❌ Failed to save interaction: {db_err}")
+
+    # Extract and save preferences
+    try:
+        full_conversation = conversation_history + [
+            {"role": "user", "content": query},
+            {"role": "assistant", "content": response_text}
+        ]
+        preferences, _ = await loop.run_in_executor(
+            None, lambda: extract_preferences_from_chat(full_conversation)
+        )
+        for pref in preferences:
+            try:
+                await database.execute(
+                    query="""
+                        INSERT INTO user_preferences (username, preference_type, content)
+                        VALUES (:username, :preference_type, :content)
+                        ON CONFLICT DO NOTHING
+                    """,
+                    values={
+                        "username": username,
+                        "preference_type": pref.get("type", "like"),
+                        "content": pref.get("content", "")
+                    }
+                )
+            except Exception:
+                pass
+    except Exception as pref_err:
+        print(f"❌ Failed to extract preferences: {pref_err}")
 
 
 from jose import JWTError, jwt

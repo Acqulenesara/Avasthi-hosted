@@ -30,12 +30,17 @@ export default function Recom() {
   const fetchRecs = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/recommendations/?username=${username}&top_k=8`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Add timestamp to bust browser cache on every fetch
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/recommendations/?top_k=8&_t=${Date.now()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+          },
+        }
+      );
       console.log("📡 Response status:", res.status);
       const data = await res.json();
       console.log("✅ Recommendations received:", data);

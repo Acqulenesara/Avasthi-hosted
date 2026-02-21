@@ -3,15 +3,14 @@
 import numpy as np
 from sqlalchemy.orm import Session
 from sentence_transformers import SentenceTransformer
-import traceback  # 1. Import the traceback module
+import traceback
+import csv
+from pathlib import Path
 
 from ..data_access import get_user_preferences, get_recent_interactions, get_user_feedback_from_db
 from ..dcl.utils import load_activity_embeddings
 from .kg import load_kg_edges
-import csv
-from pathlib import Path
 
-# --- (All your helper functions like load_activities, format_rationale, etc. remain here unchanged) ---
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 
@@ -57,8 +56,8 @@ def build_rationale(title, kg):
 
 CONTEXT_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
 # --- NEW, TUNED WEIGHTS ---
-W_LONG_TERM = 0.2
-W_SHORT_TERM = 0.5 # Reduced from 0.5
+W_LONG_TERM = 0.15
+W_SHORT_TERM = 0.55 # Reduced from 0.5
 W_FEEDBACK = 0.3    # Increased from 0.3
 
 
@@ -81,11 +80,6 @@ def create_short_term_intention_vector(messages: list) -> np.ndarray:
     full_context_text = ". ".join(messages)
     vec = CONTEXT_MODEL.encode(full_context_text)
     return vec
-
-
-
-import numpy as np
-from sqlalchemy.orm import Session
 
 
 
@@ -120,52 +114,58 @@ def recommend_activities(
         feedback_vec = create_feedback_vector(feedback, title_to_emb, embed_dim)
         short_term_vec = create_short_term_intention_vector(recent_messages)
 
-        pref_modality = long_term_prefs.get("modality")
-        long_term_vecs = [
-            title_to_emb.get(act['title']) for act in activities
-            if act.get("modality") == pref_modality and title_to_emb.get(act['title']) is not None
-        ]
-        long_term_vec = np.mean(long_term_vecs, axis=0) if long_term_vecs else np.zeros(embed_dim)
+        # Build long-term vector from liked preference keywords matched to activity titles/descriptions
+        liked_keywords = [c for pref_type, contents in long_term_prefs.items()
+                          for c in (contents if isinstance(contents, list) else [contents])
+                          if pref_type in ("like", "modality", "activity")]
 
-        # Fuse the vectors into a single user profile
+        if liked_keywords:
+            keyword_text = " ".join(liked_keywords)
+            long_term_vec = CONTEXT_MODEL.encode(keyword_text)
+        else:
+            # Fall back: average all activity embeddings (neutral prior)
+            long_term_vec = np.mean(list(title_to_emb.values()), axis=0)
+
+        # --- Normalise every signal before fusing ---
+        def safe_norm(v):
+            n = np.linalg.norm(v)
+            return v / n if n > 0 else v
+
+        long_term_vec = safe_norm(long_term_vec)
+        feedback_vec  = safe_norm(feedback_vec)  if np.linalg.norm(feedback_vec) > 0 else feedback_vec
+
         w_lt, w_st, w_fb = W_LONG_TERM, W_SHORT_TERM, W_FEEDBACK
 
         if short_term_vec is None:
-            total_weight = w_lt + w_fb if (w_lt + w_fb) > 0 else 1
-            w_lt = w_lt / total_weight
-            w_fb = w_fb / total_weight
-            w_st = 0
+            # Redistribute short-term weight to long-term
+            w_lt += w_st
+            w_st  = 0.0
             short_term_vec = np.zeros(embed_dim)
+        else:
+            short_term_vec = safe_norm(short_term_vec)
 
-        fused_vector = (w_fb * feedback_vec) + (w_lt * long_term_vec) + (w_st * short_term_vec)
+        fused_vector = w_fb * feedback_vec + w_lt * long_term_vec + w_st * short_term_vec
+        fused_vector = safe_norm(fused_vector)
 
-        norm = np.linalg.norm(fused_vector)
-        if norm > 0:
-            fused_vector /= norm
-
-        # Calculate similarity and rank activities
+        # Score every activity with cosine similarity
         results = []
         for title, embedding in title_to_emb.items():
             if title not in activity_map:
                 continue
-
-            item_norm = np.linalg.norm(embedding)
-            sim = np.dot(fused_vector, embedding / item_norm) if item_norm > 0 else 0.0
-
+            sim = float(np.dot(fused_vector, safe_norm(embedding)))
             activity_details = activity_map[title]
             results.append({
                 "title": title,
-                "score": round(float(sim), 4),
+                "score": round(sim, 4),
                 "rationale": build_rationale(title, kg),
                 "description": activity_details.get("short_description", ""),
-                "visual_asset_id": activity_details.get("visual_asset_id")
+                "visual_asset_id": activity_details.get("visual_asset_id"),
             })
 
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:top_k]
 
     except Exception as e:
-        print(f"💥 An error occurred in recommend_activities for user '{username}': {e}")
-        import traceback
+        print(f"💥 recommend_activities error for '{username}': {e}")
         print(traceback.format_exc())
         return []

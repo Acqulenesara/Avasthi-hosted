@@ -92,6 +92,10 @@ function ChatbotPage() {
     setInput('');
     setLoading(true);
 
+    // AbortController gives a 60-second timeout before showing error
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/query`, {
         method: 'POST',
@@ -99,11 +103,11 @@ function ChatbotPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({
-          query: messageText,
-          language: language
-        }),
+        body: JSON.stringify({ query: messageText, language: language }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.status === 401) {
         localStorage.removeItem("token");
@@ -113,7 +117,7 @@ function ChatbotPage() {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || `HTTP error ${response.status}`);
+        throw new Error(errData.detail || `Server error ${response.status}`);
       }
 
       const data = await response.json();
@@ -123,8 +127,13 @@ function ChatbotPage() {
       speak(botText, language);
 
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { sender: 'bot', text: `Oops! Something went wrong: ${error.message}` }]);
+      const isTimeout = error.name === 'AbortError';
+      const errorMsg = isTimeout
+        ? "It's taking longer than expected. Please try again in a moment."
+        : `Something went wrong: ${error.message}`;
+      setMessages(prev => [...prev, { sender: 'bot', text: errorMsg }]);
     } finally {
       setLoading(false);
     }
@@ -187,8 +196,10 @@ function ChatbotPage() {
           {messages.map((msg, index) => (
             <div key={index} className={`chat-bubble ${msg.sender}`}>{msg.text}</div>
           ))}
-          {loading && messages[messages.length - 1]?.text === '' && (
-             <div className="chat-bubble bot typing-indicator"><span></span><span></span><span></span></div>
+          {loading && (
+            <div className="chat-bubble bot">
+              <span style={{opacity: 0.6}}>Aarohi is thinking...</span>
+            </div>
           )}
           <div ref={chatEndRef} />
         </div>
