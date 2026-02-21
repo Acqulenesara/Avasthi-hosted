@@ -4,18 +4,12 @@ import numpy as np
 import pandas as pd
 import pickle
 import tensorflow as tf
+from pathlib import Path
 
 router = APIRouter(prefix="/diet", tags=["Diet Recommendation"])
 
-from pathlib import Path
-
-# Absolute path to backend/diet/
 BASE_DIR = Path(__file__).resolve().parent
-
-# Absolute path to backend/diet/model/
 MODEL_PATH = BASE_DIR / "model"
-
-
 
 mental_cols = [
     "stress_relief",
@@ -25,24 +19,26 @@ mental_cols = [
     "cognitive_function"
 ]
 
+# ---- Lazy-loaded globals (None until first request) ----
+_model = None
+_scaler = None
+_cliques = None
+_config = None
+_df = None
 
-# ---- Load model ONCE ----
-model = tf.keras.models.load_model(
-    MODEL_PATH / "main_diet_model.h5",
-    compile=False
-)
-
-with open(MODEL_PATH / "main_diet_scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
-
-with open(MODEL_PATH / "main_diet_cliques.pkl", "rb") as f:
-    cliques = pickle.load(f)
-
-with open(MODEL_PATH / "main_diet_config.pkl", "rb") as f:
-    config = pickle.load(f)
-
-df = pd.read_csv(MODEL_PATH / "main_diet_processed.csv")
-
+def load_assets():
+    global _model, _scaler, _cliques, _config, _df
+    if _model is None:
+        _model = tf.keras.models.load_model(
+            MODEL_PATH / "main_diet_model.h5", compile=False
+        )
+        with open(MODEL_PATH / "main_diet_scaler.pkl", "rb") as f:
+            _scaler = pickle.load(f)
+        with open(MODEL_PATH / "main_diet_cliques.pkl", "rb") as f:
+            _cliques = pickle.load(f)
+        with open(MODEL_PATH / "main_diet_config.pkl", "rb") as f:
+            _config = pickle.load(f)
+        _df = pd.read_csv(MODEL_PATH / "main_diet_processed.csv")
 
 class UserProfile(BaseModel):
     stress_relief: float
@@ -87,17 +83,19 @@ def meal_similarity(meal_a, meal_b):
 # CORE RECOMMENDATION FUNCTION
 # ----------------------------------------------------------------------------
 def recommend_meals(user_profile: dict, top_n: int):
+    load_assets()  # ensures model is loaded before use
+
     user_array = np.array([user_profile[c] for c in mental_cols])
 
-    food_name_col = config["columns"]["food_name"]
-    category_col = config["columns"]["category"]
-    calories_col = config["columns"]["calories"]
-    protein_col = config["columns"]["protein"]
+    food_name_col = _config["columns"]["food_name"]
+    category_col  = _config["columns"]["category"]
+    calories_col  = _config["columns"]["calories"]
+    protein_col   = _config["columns"]["protein"]
 
     predictions = []
     seen = set()
 
-    for clique in cliques:
+    for clique in _cliques:
         meal_id = tuple(sorted(clique))
         if meal_id in seen:
             continue
@@ -108,32 +106,32 @@ def recommend_meals(user_profile: dict, top_n: int):
         categories = set()
 
         for idx in clique:
-            food = df.iloc[idx]
+            food = _df.iloc[idx]
             foods.append({
-                "name": food[food_name_col],
+                "name":     food[food_name_col],
                 "category": food[category_col],
                 "calories": float(food[calories_col]),
-                "protein": float(food[protein_col])
+                "protein":  float(food[protein_col])
             })
             total_calories += food[calories_col]
             categories.add(food[category_col])
 
-        meal_vector = df.iloc[clique][mental_cols].mean().values
-        features = np.concatenate([user_array, meal_vector]).reshape(1, -1)
-        features_scaled = scaler.transform(features)
+        meal_vector    = _df.iloc[clique][mental_cols].mean().values
+        features       = np.concatenate([user_array, meal_vector]).reshape(1, -1)
+        features_scaled = _scaler.transform(features)
 
-        score = float(model.predict(features_scaled, verbose=0)[0][0])
+        score = float(_model.predict(features_scaled, verbose=0)[0][0])
 
         # 🔧 Calibrate score to human range (IMPORTANT)
         match_score = int(70 + (score * 30))  # → 70–100 range
         match_score = min(match_score, 99)  # never show 100%
 
         predictions.append({
-            "foods": foods,
-            "score": score,  # raw model score (keep)
-            "match_score": match_score,  # ✅ UI score
+            "foods":          foods,
+            "score":          score,
+            "match_score":    match_score,
             "total_calories": float(total_calories),
-            "categories": list(categories)
+            "categories":     list(categories)
         })
 
         if len(predictions) >= top_n * 5:
@@ -150,34 +148,23 @@ def recommend_meals(user_profile: dict, top_n: int):
             selected.append(predictions.pop(0))
             continue
 
-        best_idx = 0
+        best_idx   = 0
         best_value = -1
 
         for i, candidate in enumerate(predictions):
             # HARD penalty: repeated core foods
-            used_foods = set(
-                f["name"] for s in selected for f in s["foods"]
-            )
+            used_foods      = set(f["name"] for s in selected for f in s["foods"])
+            candidate_foods = set(f["name"] for f in candidate["foods"])
 
-            candidate_foods = set(
-                f["name"] for f in candidate["foods"]
-            )
-
-            hard_penalty = 0.0
-            if used_foods & candidate_foods:
-                hard_penalty = 0.15  # strong discouragement
-
-            relevance = candidate["score"]
-            diversity_penalty = max(
-                meal_similarity(candidate, s) for s in selected
-            )
+            hard_penalty      = 0.15 if used_foods & candidate_foods else 0.0
+            relevance         = candidate["score"]
+            diversity_penalty = max(meal_similarity(candidate, s) for s in selected)
 
             value = relevance - lambda_diversity * diversity_penalty - hard_penalty
 
-
             if value > best_value:
                 best_value = value
-                best_idx = i
+                best_idx   = i
 
         selected.append(predictions.pop(best_idx))
 
