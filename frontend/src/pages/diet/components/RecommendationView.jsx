@@ -7,12 +7,17 @@ export default function RecommendationView() {
   const { user } = useContext(UserContext);
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function getRecommendations() {
     setLoading(true);
+    setError(null);
     try {
       const data = await recommendDiet(user);
-      setMeals(data.recommendations);
+      setMeals(data.recommendations || []);
+    } catch (err) {
+      console.error("❌ Diet recommendation error:", err);
+      setError(err.message || "Failed to get recommendations. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -70,6 +75,12 @@ const minScore = scores.length ? Math.min(...scores) : 0;
         {loading && (
           <p className="loading-text">
             🤖 AI is analyzing your profile...
+          </p>
+        )}
+
+        {error && (
+          <p className="error-text" style={{ color: "red", marginTop: "1rem" }}>
+            ⚠️ {error}
           </p>
         )}
       </section>
