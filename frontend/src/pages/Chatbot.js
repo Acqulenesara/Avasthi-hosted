@@ -197,8 +197,10 @@ function ChatbotPage() {
             <div key={index} className={`chat-bubble ${msg.sender}`}>{msg.text}</div>
           ))}
           {loading && (
-            <div className="chat-bubble bot">
-              <span style={{opacity: 0.6}}>Aarohi is thinking...</span>
+            <div className="typing-bubble">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
           )}
           <div ref={chatEndRef} />
@@ -236,4 +238,3 @@ function ChatbotPage() {
 }
 
 export default ChatbotPage;
-

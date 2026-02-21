@@ -21,19 +21,17 @@ import os
 
 hf_client = InferenceClient(
     "meta-llama/Meta-Llama-3-8B-Instruct",
-    token=os.getenv("HF_API_KEY")
+    token=os.getenv("HF_API_KEY"),
+    base_url="https://router.huggingface.co"
 )
 
 def llama_chat(messages, temperature=0.4):
-    # Convert messages → single prompt string (HF API expects plain text)
-    prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages]) + "\nassistant:"
-
     result = hf_client.chat_completion(
-    model="meta-llama/Meta-Llama-3-8B-Instruct",
-    messages=messages,
-    max_tokens=300,
-    temperature=temperature
-)
+        model="meta-llama/Meta-Llama-3-8B-Instruct",
+        messages=messages,
+        max_tokens=300,
+        temperature=temperature
+    )
     return result["choices"][0]["message"]["content"]
 
 
