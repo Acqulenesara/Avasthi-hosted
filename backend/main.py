@@ -172,8 +172,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://avasthi-hosted.vercel.app",  # update with your actual Vercel URL after deploy
-        "https://*.vercel.app",               # allows all Vercel preview URLs
+        "https://avasthi-hosted.vercel.app",
+        "https://avasthi-hosted-final.vercel.app",
+        "https://*.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
