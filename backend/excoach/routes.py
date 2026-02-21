@@ -3,28 +3,24 @@ from pydantic import BaseModel
 from typing import List
 import joblib
 import pandas as pd
+import os
 
 router = APIRouter(prefix="/exercise", tags=["Exercise ML"])
 
 # -----------------------------
 #   ML MODEL LOADING (ONCE)
 # -----------------------------
-import os
-import joblib
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "backend")
 
-model = joblib.load(os.path.join(MODEL_DIR, "exercise_model.pkl"))
-label_encoder = joblib.load(os.path.join(MODEL_DIR, "label_encoder.pkl"))
-
-# try:
-#     model = joblib.load("backend/exercise_model.pkl")
-#     label_encoder = joblib.load("backend/label_encoder.pkl")
-# except Exception as e:
-#     model = None
-#     label_encoder = None
-#     print("❌ Failed to load exercise ML models:", e)
+try:
+    model = joblib.load(os.path.join(MODEL_DIR, "exercise_model.pkl"))
+    label_encoder = joblib.load(os.path.join(MODEL_DIR, "label_encoder.pkl"))
+    print("✅ Exercise ML models loaded successfully")
+except Exception as e:
+    model = None
+    label_encoder = None
+    print(f"⚠️ Exercise ML models not found, ML prediction disabled: {e}")
 
 FEATURE_COLS = [
     "Shoulder_Angle", "Elbow_Angle", "Hip_Angle", "Knee_Angle", "Ankle_Angle",
