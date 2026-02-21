@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import * as poseDetection from "@mediapipe/pose";
 import * as cam from "@mediapipe/camera_utils";
 
@@ -103,7 +103,7 @@ const ML_EXERCISE_CONFIG = {
     return () => window.removeEventListener("click", enableVoice);
   }, []);
 
-  const speak = (text) => {
+  const speak = useCallback((text) => {
     if (!voiceEnabled) return;
     const synth = window.speechSynthesis;
     if (!synth) return;
@@ -113,12 +113,12 @@ const ML_EXERCISE_CONFIG = {
     utter.rate = 1;
     utter.volume = 1;
     synth.speak(utter);
-  };
+  }, [voiceEnabled]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (instruction) speak(instruction);
-  }, [instruction]);
+  }, [instruction, speak]);
 
   // Setup MediaPipe Pose
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,17 +135,14 @@ const ML_EXERCISE_CONFIG = {
     });
     pose.onResults(onResults);
 
-    // store camera reference so we can stop it on cleanup
     let cameraInstance = null;
 
     if (typeof cam.Camera !== "undefined" && videoRef.current) {
       cameraInstance = new cam.Camera(videoRef.current, {
         onFrame: async () => {
           try {
-            // Guard: only send frames if video element still exists
             if (videoRef.current) await pose.send({ image: videoRef.current });
           } catch (e) {
-            // swallow errors caused by unmounted elements
             console.warn("pose.send error:", e);
           }
         },
@@ -155,7 +152,6 @@ const ML_EXERCISE_CONFIG = {
       cameraInstance.start();
     }
 
-    // Cleanup to avoid camera/pose calling onResults after unmount
     return () => {
       try {
         if (cameraInstance && typeof cameraInstance.stop === "function") cameraInstance.stop();
