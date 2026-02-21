@@ -20,14 +20,12 @@ from huggingface_hub import InferenceClient
 import os
 
 hf_client = InferenceClient(
-    "meta-llama/Meta-Llama-3-8B-Instruct",
+    model="https://router.huggingface.co/hf-inference/models/meta-llama/Meta-Llama-3-8B-Instruct/v1",
     token=os.getenv("HF_API_KEY"),
-    base_url="https://router.huggingface.co"
 )
 
 def llama_chat(messages, temperature=0.4):
     result = hf_client.chat_completion(
-        model="meta-llama/Meta-Llama-3-8B-Instruct",
         messages=messages,
         max_tokens=300,
         temperature=temperature
