@@ -20,6 +20,7 @@ const ExerciseCam = () => {
   const [mlPrediction, setMlPrediction] = useState("");
   const [mlConfidence, setMlConfidence] = useState(0);
   const [repCount, setRepCount] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [postureScore, setPostureScore] = useState(100);
   const ML_EXERCISES = [
   "squats",
@@ -114,11 +115,13 @@ const ML_EXERCISE_CONFIG = {
     synth.speak(utter);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (instruction) speak(instruction);
   }, [instruction]);
 
   // Setup MediaPipe Pose
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const pose = new poseDetection.Pose({
       locateFile: (file) =>
@@ -277,8 +280,10 @@ const extractAngles = (lm) => {
     try {
       // Calculate all 10 angles as per your training data
       const leftShoulder = lm[11], leftElbow = lm[13], leftWrist = lm[15];
+      // eslint-disable-next-line no-unused-vars
       const rightShoulder = lm[12], rightElbow = lm[14], rightWrist = lm[16];
       const leftHip = lm[23], leftKnee = lm[25], leftAnkle = lm[27];
+      // eslint-disable-next-line no-unused-vars
       const rightHip = lm[24], rightKnee = lm[26], rightAnkle = lm[28];
 
       const angles = [
@@ -307,7 +312,7 @@ const extractAngles = (lm) => {
       setMlPrediction(data.predicted_exercise);
       
       // Calculate confidence based on match with current exercise
-      const expectedExercise = exercise === "arm_raise" ? "arms_up" : "squat"; 
+      const expectedExercise = exercise === "arm_raise" ? "arms_up" : "squat";
       const prediction = data.predicted_exercise?.toLowerCase() || "";
 
       setMlPrediction(prediction);
@@ -440,7 +445,7 @@ const handleMLExerciseFeedback = (lm) => {
     
     // Check if arms are in front (wrists should be forward of shoulders)
     const armsForward = leftWrist.z < leftShoulder.z && rightWrist.z < rightShoulder.z;
-    
+
     // Check if elbows are bent (wall push position)
     const elbowsBent = leftElbowAngle < 140 && rightElbowAngle < 140;
     
