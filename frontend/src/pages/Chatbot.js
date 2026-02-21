@@ -42,6 +42,7 @@ function ChatbotPage() {
       sendMessage(voiceText);
     };
     recognition.onend = () => setIsListening(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // This effect runs only once
 
   useEffect(() => {
@@ -126,18 +127,16 @@ function ChatbotPage() {
         const chunk = decoder.decode(value, { stream: true });
         accumulatedResponse += chunk;
 
-        // Update the last message in the state with the new text chunk
+        // Capture in block-scoped const to avoid unsafe closure over loop variable
+        const snapshot = accumulatedResponse;
+
         setMessages(prev => {
           const newMessages = [...prev];
-          // **FIX IS HERE**: We check if the accumulated text is JSON and parse it.
           try {
-            // Try to parse the accumulated text as JSON
-            const jsonData = JSON.parse(accumulatedResponse);
-            // If successful, use the 'response' field
-            newMessages[newMessages.length - 1].text = jsonData.response || accumulatedResponse;
+            const jsonData = JSON.parse(snapshot);
+            newMessages[newMessages.length - 1].text = jsonData.response || snapshot;
           } catch (e) {
-            // If it's not valid JSON yet (or is plain text stream), just display the text
-            newMessages[newMessages.length - 1].text = accumulatedResponse;
+            newMessages[newMessages.length - 1].text = snapshot;
           }
           return newMessages;
         });
@@ -265,3 +264,4 @@ function ChatbotPage() {
 }
 
 export default ChatbotPage;
+

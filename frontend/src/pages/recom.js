@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import RecommendationCard from "./RecommenderCard";
 import { jwtDecode } from "jwt-decode";
@@ -27,30 +27,18 @@ export default function Recom() {
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (username) {
-      console.log("📡 Fetching recommendations for:", username);
-      fetchRecs();
-    }
-  }, [username]);
-
-  const fetchRecs = async () => {
+  const fetchRecs = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`http://127.0.0.1:8000/recommendations/?username=${username}&top_k=8`, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  },
-});
-
-
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       console.log("📡 Response status:", res.status);
       const data = await res.json();
       console.log("✅ Recommendations received:", data);
-
-      // ✅ Handle both `{ recommendations: [...] }` and `[...]` response shapes
       const recs = Array.isArray(data) ? data : data.recommendations || [];
       setRecommendations(recs);
     } catch (err) {
@@ -58,7 +46,14 @@ export default function Recom() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [username]);
+
+  useEffect(() => {
+    if (username) {
+      console.log("📡 Fetching recommendations for:", username);
+      fetchRecs();
+    }
+  }, [username, fetchRecs]);
 
   const handleFeedback = async (activity_title, liked = true) => {
     try {

@@ -311,8 +311,6 @@ const extractAngles = (lm) => {
 
       setMlPrediction(data.predicted_exercise);
       
-      // Calculate confidence based on match with current exercise
-      const expectedExercise = exercise === "arm_raise" ? "arms_up" : "squat";
       const prediction = data.predicted_exercise?.toLowerCase() || "";
 
       setMlPrediction(prediction);
@@ -439,17 +437,11 @@ const handleMLExerciseFeedback = (lm) => {
     const leftWrist = lm[15], leftElbow = lm[13], leftShoulder = lm[11];
     const rightWrist = lm[16], rightElbow = lm[14], rightShoulder = lm[12];
     
-    // Check elbow angles (should be bent for push position)
     const leftElbowAngle = getAngle(leftWrist, leftElbow, leftShoulder);
     const rightElbowAngle = getAngle(rightWrist, rightElbow, rightShoulder);
     
-    // Check if arms are in front (wrists should be forward of shoulders)
-    const armsForward = leftWrist.z < leftShoulder.z && rightWrist.z < rightShoulder.z;
-
-    // Check if elbows are bent (wall push position)
     const elbowsBent = leftElbowAngle < 140 && rightElbowAngle < 140;
     
-    // Arms should be roughly parallel
     const armsLevel = Math.abs(leftWrist.y - rightWrist.y) < 0.1;
     
     const isCorrect = elbowsBent && armsLevel && (leftElbowAngle > 60 && rightElbowAngle > 60);
