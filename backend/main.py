@@ -131,7 +131,7 @@ class UserPreference(Base):
 
 # Use databases for async DB interaction
 database = Database(DATABASE_URL)
-engine = create_engine(DATABASE_URL.replace("asyncpg", "psycopg2"))
+engine = create_engine(DATABASE_URL.replace("asyncpg", "psycopg2").split("?")[0])
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create tables (you can also run Alembic migrations)
@@ -749,5 +749,3 @@ app.include_router(exercise_router)
 print("\nAvailable routes:")
 for route in app.routes:
     print(f"{route.path} - {', '.join(route.methods)}")
-
-
