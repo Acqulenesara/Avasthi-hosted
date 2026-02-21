@@ -51,7 +51,7 @@ export default function Recom() {
     } finally {
       setLoading(false);
     }
-  }, [username]);
+  }, []);
 
   useEffect(() => {
     if (username) {
