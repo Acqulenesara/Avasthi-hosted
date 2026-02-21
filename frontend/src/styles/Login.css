@@ -1,0 +1,97 @@
+/* Make Text Bold */
+h2, p, label, a {
+  font-weight: bold;
+}
+
+/* Background */
+body {
+  background: #f3e8ff;
+  font-family: Arial, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  background: #b592d3;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  font-size: 16px;
+}
+
+/* Centering Content */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Login Box */
+.login-box {
+  background: #e6d1f2;
+  padding: 30px;
+  width: 380px;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.logo {
+  width: 80px;
+  margin-bottom: 10px;
+}
+
+/* Character Image */
+.character {
+  width: 120px;
+  margin-bottom: 15px;
+  border-radius: 50%;
+}
+
+/* Input Fields */
+input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Button */
+button {
+  background: #a46bb0;
+  color: white;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #8e5a98;
+}
+
+/* Links */
+p {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+a {
+  color: #6a357f;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

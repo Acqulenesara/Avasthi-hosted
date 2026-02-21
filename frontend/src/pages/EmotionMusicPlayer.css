@@ -1,0 +1,66 @@
+.player-container {
+  min-height: 100vh;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #d8b4fe 0%, #c4b5fd 50%, #ffffff 100%);
+}
+
+.player-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.player-header .emoji-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.player-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.player-header p {
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.emotions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.emotion-card {
+  background-color: rgba(255,255,255,0.7);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.emotion-card.hovered,
+.emotion-card:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.emotion-card .emoji {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.emotion-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.emotion-card p {
+  font-size: 0.9rem;
+  color: #555;
+}

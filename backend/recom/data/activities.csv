@@ -1,0 +1,49 @@
+id,title,short_description,modality,duration,difficulty,expected_environment,contraindications,evidence,visual_asset_id
+1,Write in a journal,"Spend time writing thoughts or feelings in a journal.",creative,15,Easy,Quiet space,None,CBT journaling studies,journal.png
+2,Watch the sunset,"Take time to watch the sunset outdoors.",mindfulness,20,Easy,Outdoors,None,Mindfulness-based stress reduction,sunset.png
+3,Go rock climbing,"Engage in indoor or outdoor rock climbing.",physical,60,Hard,Gym or outdoors,Physical injury risk,Exercise improves mood,climb.png
+4,Draw or paint,"Express yourself through drawing or painting.",creative,30,Easy,Home or studio,None,Art therapy studies,paint.png
+5,Cook a meal,"Prepare and cook a meal from scratch.",creative,45,Medium,Kitchen,None,Mindful cooking research,cook.png
+6,Go to a play,"Attend a live play or theater performance.",creative,120,Easy,Theater,None,Leisure activity research,play.png
+7,Go to a concert,"Listen to live music at a concert.",creative,120,Medium,Concert hall,None,Music therapy studies,concert.png
+8,Visit a friend,"Spend time visiting a friend socially.",social,60,Easy,Friend’s place,None,Social connectedness studies,friend.png
+9,Start a blog,"Create and write blog posts online.",creative,30,Medium,Home,None,Digital journaling research,blog.png
+10,Practice a dance,"Learn or practice dance moves.",physical,30,Medium,Open space,None,Dance therapy studies,dance.png
+11,Read a book,"Spend time reading a book you enjoy.",mindfulness,30,Easy,Home or library,None,Reading reduces stress,book.png
+12,Take photos,"Go out and take photographs.",creative,30,Easy,Outdoors,None,Leisure activity research,photo.png
+13,Do yoga,"Practice yoga poses for relaxation.",physical,30,Medium,Quiet space,Physical injury risk,Yoga for anxiety,yoga.png
+14,Lift weights,"Strength train using weights.",physical,45,Medium,Gym,Physical injury risk,Exercise improves mood,weights.png
+15,Go for a walk,"Take a walk outdoors or indoors.",physical,20,Easy,Outdoors,None,Walking for stress reduction,walk.png
+16,Meditate,"Practice guided or silent meditation.",mindfulness,15,Easy,Quiet space,None,Mindfulness meditation research,meditate.png
+17,Go out for coffee,"Meet someone or enjoy coffee alone.",social,30,Easy,Cafe,None,Social engagement studies,coffee.png
+18,Go stargazing,"Watch stars in the night sky.",mindfulness,30,Easy,Outdoors,None,Mindfulness research,stars.png
+19,Go to the beach,"Spend time relaxing at the beach.",mindfulness,120,Easy,Outdoors,None,Nature therapy research,beach.png
+20,Play a sport,"Participate in a favorite sport.",physical,60,Medium,Sports ground,None,Exercise research,sport.png
+21,Go to the library,"Read or borrow books at a library.",mindfulness,60,Easy,Library,None,Leisure studies,library.png
+22,Visit neighbors,"Socialize with neighbors.",social,20,Easy,Neighborhood,None,Community connectedness,neighbors.png
+23,Call a friend,"Have a meaningful phone call with a friend.",social,15,Easy,Anywhere,None,Social support research,call.png
+24,Volunteer,"Do volunteer work for a cause.",social,120,Medium,Community,None,Helping others improves wellbeing,volunteer.png
+25,Explore somewhere new,"Visit a new place nearby.",mindfulness,90,Medium,Outdoors,None,Nature exposure research,explore.png
+26,Rearrange a room,"Rearrange furniture or clean a room.",creative,45,Easy,Home,None,Behavioral activation evidence,rearrange.png
+27,Visit a museum,"Spend time learning at a museum.",creative,90,Easy,Museum,None,Leisure activity research,museum.png
+28,Knit,"Engage in knitting or crocheting.",creative,30,Easy,Home,None,Art/craft therapy studies,knit.png
+29,Write a poem,"Express yourself by writing a poem.",creative,20,Easy,Quiet space,None,Creative writing therapy,poem.png
+30,Hike on a nature trail,"Go hiking in nature.",physical,120,Medium,Trail,Physical injury risk,Nature exposure research,hike.png
+31,Play cards,"Play card games alone or with others.",social,30,Easy,Home,None,Leisure activity research,cards.png
+32,Have a picnic,"Prepare food and have a picnic outdoors.",social,90,Easy,Park,None,Nature therapy research,picnic.png
+33,Watch a movie,"Watch a film for enjoyment.",creative,120,Easy,Home or cinema,None,Leisure activity studies,movie.png
+34,Go swimming,"Swim for leisure or exercise.",physical,45,Medium,Pool or beach,Physical injury risk,Exercise improves mood,swim.png
+35,Do a puzzle,"Complete a jigsaw or logic puzzle.",creative,30,Easy,Home,None,Cognitive stimulation research,puzzle.png
+36,Play an instrument,"Practice or perform music.",creative,30,Medium,Home,None,Music therapy, instrument.png
+37,Work in a garden,"Do gardening activities.",physical,60,Medium,Garden,None,Nature therapy research,garden.png
+38,Listen to a podcast,"Listen to a podcast on a topic of interest.",mindfulness,20,Easy,Home,None,Digital learning research,podcast.png
+39,Bake a dessert,"Bake a sweet dessert at home.",creative,60,Medium,Kitchen,None,Behavioral activation evidence,bake.png
+40,Visit a tourist attraction,"Go sightseeing at a local attraction.",mindfulness,120,Easy,Outdoors,None,Leisure research,tourist.png
+41,Play a board game,"Play board games with others.",social,45,Easy,Home,None,Leisure activity research,board.png
+42,Make origami,"Fold origami paper crafts.",creative,20,Easy,Home,None,Art therapy research,origami.png
+43,Go for a bike ride,"Ride a bicycle for leisure or fitness.",physical,60,Medium,Outdoors,Physical injury risk,Exercise improves mood,bike.png
+44,Visit a park,"Spend time in a local park.",mindfulness,45,Easy,Park,None,Nature exposure research,park.png
+45,Discover new music,"Listen to new music you haven’t heard before.",creative,20,Easy,Home,None,Music therapy,music.png
+46,Care for a pet,"Spend quality time with a pet.",social,30,Easy,Home,None,Pet therapy research,pet.png
+47,Write a letter,"Write a personal letter to someone.",creative,20,Easy,Home,None,Expressive writing therapy,letter.png
+48,Try a new food,"Try cooking or eating a new dish.",creative,30,Easy,Restaurant or home,None,Behavioral activation evidence,food.png

@@ -1,0 +1,46 @@
+services:
+  # ─────────────────────────────────────────────
+  # Service 1: Main Backend (FastAPI)
+  # ─────────────────────────────────────────────
+  - type: web
+    name: flow-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: POSTGRES_URL
+        sync: false          # you will fill this in the Render dashboard
+      - key: PGHOST
+        sync: false
+      - key: PGPORT
+        sync: false
+      - key: PGDB
+        sync: false
+      - key: PGUSER
+        sync: false
+      - key: PGPASSWORD
+        sync: false
+      - key: HF_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: WHEREBY_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  # ─────────────────────────────────────────────
+  # Service 2: Diet Backend (TensorFlow / Keras)
+  # ─────────────────────────────────────────────
+  - type: web
+    name: flow-diet-backend
+    runtime: python
+    rootDir: backend/diet
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

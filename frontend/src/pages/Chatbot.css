@@ -1,0 +1,255 @@
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f9f7fc;
+  color: #333;
+}
+
+.app {
+  text-align: center;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #e5d1f5;
+  padding: 15px 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-img {
+  height: 40px;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-weight: bold;
+  font-size: 20px;
+  color: #6a2c91;
+}
+
+.nav-links a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: #4c4c4c;
+  font-weight: bold;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav-links a:hover {
+  color: #6a2c91;
+}
+
+/* Hero Section */
+.hero {
+  background-color: #ffffff;
+  padding: 60px 20px;
+  border-radius: 15px;
+  margin: 20px auto;
+  max-width: 1200px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.hero-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+}
+
+.hero-text {
+  max-width: 500px;
+  text-align: left;
+}
+
+.hero h1 {
+  font-size: 36px;
+  margin: 0;
+  color: #333;
+}
+
+.intro-text {
+  margin: 15px 0;
+  font-size: 16px;
+  color: #666;
+}
+
+.lets-talk {
+  font-style: italic;
+  color: #9c6ad4;
+  font-weight: bold;
+}
+
+.hero-image img {
+  max-width: 300px;
+  border-radius: 10px;
+}
+
+/* Chat Section */
+.chat-section {
+  padding: 30px;
+  background-color: #f9f7fc;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin: 30px auto;
+  max-width: 800px;
+  text-align: center;
+}
+
+.chat-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  max-width: 600px;
+  height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin: 0 auto 15px;
+}
+
+/* Chat Bubbles */
+.chat-bubble {
+  padding: 10px 15px;
+  border-radius: 20px;
+  max-width: 80%;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+.chat-bubble.user {
+  background-color: #d6c4e9;
+  align-self: flex-end;
+  text-align: right;
+  color: #4c4c4c;
+}
+
+.chat-bubble.bot {
+  background-color: #f0e6ff;
+  align-self: flex-start;
+  text-align: left;
+  color: #4c4c4c;
+}
+
+/* Chat Input */
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.chat-input input {
+  flex: 1;
+  max-width: 500px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.emoji-btn, .send-btn {
+  background-color: #9c6ad4;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.emoji-btn:hover, .send-btn:hover {
+  background-color: #7c4ab5;
+}
+
+/* === NEW & IMPROVED LANGUAGE SELECTOR === */
+
+/* This is the main container for the label and dropdown */
+.language-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Adds space between the label and the dropdown */
+  margin-bottom: 15px;
+}
+
+/* Styling for the "Language:" text */
+.language-selector label {
+  font-weight: bold;
+  color: #6a2c91; /* Matches your dark purple logo text */
+  font-size: 1rem;
+}
+
+/* The custom-styled dropdown menu */
+.language-selector select {
+  /* Reset default browser styles */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Custom styles to match your theme */
+  background-color: #ffffff;
+  border: 2px solid #e5d1f5; /* Uses the light purple from your navbar */
+  border-radius: 20px;       /* Matches your input fields and buttons */
+  padding: 8px 35px 8px 15px; /* Right padding makes space for the custom arrow */
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #6a2c91;             /* Dark purple text */
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease-in-out;
+
+  /* Custom dropdown arrow using an SVG background image */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236a2c91' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1em;
+}
+
+/* Hover and focus effects for better user experience */
+.language-selector select:hover {
+  border-color: #9c6ad4; /* Uses the main purple accent color on hover */
+}
+
+.language-selector select:focus {
+  border-color: #9c6ad4;
+  box-shadow: 0 0 8px rgba(156, 106, 212, 0.4); /* Adds a soft glow when selected */
+}
+/* Optional: Add a subtle typing indicator */
+.typing-indicator {
+  padding: 10px 20px;
+}
+.typing-indicator span {
+  height: 8px;
+  width: 8px;
+  background-color: #9E9EA1;
+  border-radius: 50%;
+  display: inline-block;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator span:nth-of-type(2) {
+  animation-delay: -0.32s;
+}
+.typing-indicator span:nth-of-type(3) {
+  animation-delay: -0.16s;
+}
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
+}

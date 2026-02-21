@@ -1,0 +1,116 @@
+/* General layout */
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #f3e8ff, #e9d5ff);
+  padding: 24px;
+  text-align: center;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4c1d95;
+  margin-bottom: 8px;
+}
+
+.dashboard-header p {
+  color: #6b21a8;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+/* Loading screen */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(to bottom right, #f3e8ff, #e9d5ff);
+  font-size: 1.2rem;
+  color: #4c1d95;
+}
+
+/* Grid */
+ .recommendations-grid {
+      display: grid;
+      /* Creates responsive columns: they fit as many as possible, with a minimum width of 320px */
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Updated Recommendation card styles */
+    .recommendation-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      overflow: hidden; /* Ensures the image corners are rounded */
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+.recommendation-image {
+  border-radius: 12px;
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.recommendation-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 10px;
+  color: #3b0764;
+}
+
+.recommendation-desc {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.recommendation-score {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #7e22ce;
+  font-weight: 500;
+}
+
+/* Feedback buttons */
+.feedback-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.like-btn,
+.dislike-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.like-btn {
+  background: #9333ea;
+  color: white;
+}
+
+.like-btn:hover {
+  background: #7e22ce;
+}
+
+.dislike-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.dislike-btn:hover {
+  background: #d1d5db;
+}

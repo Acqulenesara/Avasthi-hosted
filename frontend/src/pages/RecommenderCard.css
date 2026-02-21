@@ -1,0 +1,44 @@
+.rec-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 260px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+  margin: 15px;
+}
+
+.rec-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.rec-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 15px;
+}
+
+.rec-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4b0082; /* purple-ish */
+  margin-top: 12px;
+}
+
+.rec-description {
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 8px;
+}
+
+.rec-score {
+  font-size: 0.8rem;
+  color: #6a0dad;
+  font-weight: 500;
+  margin-top: 10px;
+}

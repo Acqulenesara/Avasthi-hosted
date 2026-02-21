@@ -1,0 +1,122 @@
+/* General Page Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f7f5fc;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Navbar */
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #c3a2d4;
+    padding: 15px 50px;
+  }
+
+  .logo {
+    width: 50px;
+  }
+
+  .nav-links a {
+    margin: 0 15px;
+    text-decoration: none;
+    font-weight: bold;
+    color: black;
+  }
+
+  .nav-links a:hover {
+    color: #6a357f;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 50px;
+  }
+
+  .text-content h2 {
+    font-size: 22px;
+    font-weight: bold;
+    color: #6a357f;
+    margin: 5px 0;
+  }
+
+  .hero-image {
+    width: 300px;
+    border-radius: 10px;
+  }
+
+  .btn {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #6a357f;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+
+  .btn:hover {
+    background-color: #502a5c;
+  }
+
+  /* Resources Section */
+  .resources-section {
+    background: white;
+    padding: 30px;
+    text-align: center;
+  }
+
+  .resource-links a {
+    display: inline-block;
+    margin: 10px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+  }
+
+  .resource-links a:hover {
+    color: #6a357f;
+  }
+  .resource-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.resource-links a,
+.resource-links button {
+    text-decoration: none;
+    background: #8c72cf; /* Soft purple */
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 20px;
+    border-radius: 25px;
+    border: none;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.resource-links a:hover,
+.resource-links button:hover {
+    background: #6a54b3; /* Darker purple */
+    transform: scale(1);
+}
+
+.resource-links a:active,
+.resource-links button:active {
+    transform: scale(0.98);
+}
+
+.resource-links button {
+    outline: none;
+}

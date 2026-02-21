@@ -1,0 +1,194 @@
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #eef6ff, #f5ebff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  font-family: "Poppins", sans-serif;
+  color: #2d2d2d;
+  text-align: center;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #7c3aed, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  color: #555;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+/* Exercise Buttons */
+.exercise-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.exercise-btn {
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  width: 220px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.exercise-btn.active {
+  border-color: #a855f7;
+  background: #f3e8ff;
+  box-shadow: 0px 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+/* Circle */
+.circle-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circle {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  transition: transform 4s ease-in-out, background 1s ease;
+  opacity: 0.8;
+}
+
+.circle.inhale {
+  background: linear-gradient(to bottom right, #60a5fa, #a78bfa);
+  transform: scale(1.4);
+}
+
+.circle.hold {
+  background: linear-gradient(to bottom right, #a78bfa, #ec4899);
+  transform: scale(1.4);
+}
+
+.circle.exhale {
+  background: linear-gradient(to bottom right, #ec4899, #fb923c);
+  transform: scale(0.8);
+}
+
+.circle.pause {
+  background: linear-gradient(to bottom right, #34d399, #3b82f6);
+  transform: scale(1);
+}
+
+.circle-text {
+  position: relative;
+  z-index: 2;
+}
+
+/* Phase */
+.phase-label {
+  margin-top: 1rem;
+}
+
+.phase-label h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 600px;
+}
+
+.stat {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.control-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.control-btn.start {
+  background: linear-gradient(to right, #7c3aed, #ec4899);
+  color: #fff;
+}
+
+.control-btn.pause {
+  background: #f97316;
+  color: #fff;
+}
+
+.control-btn.reset {
+  background: #e5e7eb;
+  color: #333;
+}
+
+/* Duration Selector */
+.duration-selector {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.duration-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.duration-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.duration-btn.active {
+  background: #7c3aed;
+  color: #fff;
+  border-color: #7c3aed;
+}
