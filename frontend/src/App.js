@@ -193,7 +193,7 @@ function App() {
   const token = localStorage.getItem("token");
   if (token) {
     // optionally verify token via backend / or decode locally
-    fetch('http://127.0.0.1:8000/verify-token', {
+    fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/verify-token`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${token}` },
     }).then(res => {
