@@ -10,7 +10,7 @@ function EntryList() {
         const token = localStorage.getItem("token"); // get JWT token
         if (!token) return;
 
-        const res = await axios.get("http://127.0.0.1:8000/journal/entries", {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/journal/entries`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

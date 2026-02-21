@@ -96,7 +96,7 @@ function ChatbotPage() {
 
     try {
       // Ensure this endpoint matches your backend route
-      const response = await fetch('http://127.0.0.1:8000/query', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

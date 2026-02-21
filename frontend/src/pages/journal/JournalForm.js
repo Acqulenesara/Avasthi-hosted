@@ -9,7 +9,7 @@ function JournalForm({ userId }) {
     if (!entry.trim()) return;
 
     try {
-      const res = await axios.post('http://127.0.0.1:8000/journal/submit', {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/journal/submit`, {
   entry: entry
 }, {
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }

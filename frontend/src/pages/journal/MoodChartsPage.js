@@ -11,7 +11,7 @@ function MoodChartsPage({ userId }) {
   useEffect(() => {
     const fetchEntries = async () => {
       try {
-        const res = await axios.get(`http://127.0.0.1:8000/journal/entries`, {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/journal/entries`, {
   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
 });
 

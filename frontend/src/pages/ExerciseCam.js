@@ -294,7 +294,7 @@ const extractAngles = (lm) => {
         getGroundAngle(leftAnkle, { x: leftAnkle.x + 0.1, y: leftAnkle.y }), // Ankle_Ground_Angle
       ];
 
-      const response = await fetch("http://localhost:8000/exercise/predict", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/exercise/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ angles }),
@@ -348,7 +348,7 @@ const handleMLExerciseFeedback = (lm) => {
   // Save posture data to backend
   const savePostureData = async () => {
     try {
-      await fetch("http://localhost:8000/exercise/posture", {
+      await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/exercise/posture`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
