@@ -1,8 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "frontend/build",
+  "outputDirectory": "build",
   "installCommand": "npm install",
-  "framework": "create-react-app",
-  "rootDirectory": "frontend"
+  "framework": "create-react-app"
 }
-
