@@ -92,11 +92,7 @@ function ChatbotPage() {
     setInput('');
     setLoading(true);
 
-    // Add an empty bot message that we will fill with streamed text
-    setMessages(prev => [...prev, { sender: 'bot', text: '' }]);
-
     try {
-      // Ensure this endpoint matches your backend route
       const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/query`, {
         method: 'POST',
         headers: {
@@ -114,56 +110,21 @@ function ChatbotPage() {
         navigate("/login");
         return;
       }
-      if (!response.ok || !response.body) throw new Error(`HTTP error!`);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedResponse = '';
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedResponse += chunk;
-
-        // Capture in block-scoped const to avoid unsafe closure over loop variable
-        const snapshot = accumulatedResponse;
-
-        setMessages(prev => {
-          const newMessages = [...prev];
-          try {
-            const jsonData = JSON.parse(snapshot);
-            newMessages[newMessages.length - 1].text = jsonData.response || snapshot;
-          } catch (e) {
-            newMessages[newMessages.length - 1].text = snapshot;
-          }
-          return newMessages;
-        });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `HTTP error ${response.status}`);
       }
 
-      // Final check and parse after stream is complete
-      let finalResponseText = accumulatedResponse;
-      try {
-          const jsonData = JSON.parse(accumulatedResponse);
-          if (jsonData.response) {
-              finalResponseText = jsonData.response;
-              // Update the final message with just the response text
-               setMessages(prev => {
-                  const newMessages = [...prev];
-                  newMessages[newMessages.length - 1].text = finalResponseText;
-                  return newMessages;
-                });
-          }
-      } catch(e) {
-          // It was a plain text stream, no final parsing needed.
-      }
+      const data = await response.json();
+      const botText = data.response || "I'm sorry, I didn't get a response.";
 
-      speak(finalResponseText, language);
+      setMessages(prev => [...prev, { sender: 'bot', text: botText }]);
+      speak(botText, language);
 
     } catch (error) {
-      console.error('Error fetching stream:', error);
-      setMessages(prev => [...prev.slice(0, -1), { sender: 'bot', text: 'Oops! Something went wrong.' }]);
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, { sender: 'bot', text: `Oops! Something went wrong: ${error.message}` }]);
     } finally {
       setLoading(false);
     }

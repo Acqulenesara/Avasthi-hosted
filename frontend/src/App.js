@@ -190,7 +190,8 @@ function App() {
 
   // Ping backend on app load to wake up Render free tier
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/docs`, { method: 'GET' })
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+    fetch(`${apiUrl}/`, { method: 'GET' })
       .catch(() => {}); // silently ignore errors - just waking up the server
   }, []);
 
@@ -198,7 +199,8 @@ function App() {
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
-      fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/verify-token`, {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+      fetch(`${apiUrl}/verify-token`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${storedToken}` },
       }).then(res => {

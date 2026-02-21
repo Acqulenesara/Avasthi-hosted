@@ -167,6 +167,8 @@ def pg_conn(pg_conf=PG):
 app = FastAPI()
 
 # Add CORS middleware
+# Bearer token auth doesn't need credentials=True (that's for cookies).
+# Using allow_origins=["*"] with allow_credentials=False is correct here.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -278,7 +280,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 class QueryPayload(BaseModel):
     query: str
-    #thread_id: str | None = None # Add this line
+    language: str = "en-US"  # optional, sent by frontend
 
 
 # Load the sentiment analysis model from NLP Town
@@ -737,15 +739,10 @@ from recom.backend.routes.recommendations import router as rec_router
 app.include_router(rec_router)
 app.include_router(consult_router)
 
-
 from excoach.routes import router as exercise_router
-
 app.include_router(exercise_router)
 
-# from diet.routes import router as diet_router
-# app.include_router(diet_router)
-
-
-print("\nAvailable routes:")
-for route in app.routes:
-    print(f"{route.path} - {', '.join(route.methods)}")
+# Health check - keeps Render from sleeping & used as wake-up ping
+@app.get("/")
+async def health_check():
+    return {"status": "ok", "message": "Avasthi backend is running"}
