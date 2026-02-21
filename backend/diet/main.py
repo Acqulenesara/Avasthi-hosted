@@ -15,7 +15,6 @@ app.add_middleware(
 
 app.include_router(diet_router)
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def health_check():
     return {"status": "Diet service is running"}
-
