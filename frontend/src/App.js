@@ -188,11 +188,24 @@ function HomePage() {
 function App() {
   const [, setToken] = useState(localStorage.getItem("token") || "");
 
-  // Ping backend on app load to wake up Render free tier
+  // Ping backend on app load to wake up Render free tier — retry until alive
   useEffect(() => {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
-    fetch(`${apiUrl}/`, { method: 'GET' })
-      .catch(() => {}); // silently ignore errors - just waking up the server
+    let cancelled = false;
+
+    const wakeUp = async () => {
+      for (let i = 0; i < 10; i++) {
+        if (cancelled) return;
+        try {
+          const res = await fetch(`${apiUrl}/`, { method: 'GET' });
+          if (res.ok) return; // server is alive — stop pinging
+        } catch (_) { /* still cold */ }
+        await new Promise((r) => setTimeout(r, 5000)); // wait 5s before next ping
+      }
+    };
+
+    wakeUp();
+    return () => { cancelled = true; };
   }, []);
 
   // Keep token in sync with localStorage

@@ -258,7 +258,6 @@ async def startup():
     nltk.download("punkt_tab", quiet=True)
 
     # Migrate: add unique constraint on feedback table if it doesn't exist yet
-    # (create_all won't alter an already-existing table)
     try:
         with engine.connect() as conn:
             conn.execute(text("""
@@ -269,14 +268,22 @@ async def startup():
             conn.commit()
             print("✅ feedback unique constraint created")
     except Exception as e:
-        # Constraint already exists — that's fine
         print(f"ℹ️ feedback constraint already exists or table missing: {e}")
 
-    # Warm up the embedding model so the first /query request doesn't pay the load penalty
+    # ── Warm up the embedding model in the BACKGROUND so the server
+    #    starts accepting /token and / requests immediately.
     import asyncio
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, _get_embedding_model)
-    print("✅ Embedding model warmed up")
+
+    async def _warm_up_in_background():
+        loop = asyncio.get_event_loop()
+        try:
+            await loop.run_in_executor(None, _get_embedding_model)
+            print("✅ Embedding model warmed up")
+        except Exception as e:
+            print(f"⚠️ Embedding model warm-up failed: {e}")
+
+    asyncio.create_task(_warm_up_in_background())
+    print("🚀 Server ready — embedding model loading in background")
 
 @app.on_event("shutdown")
 async def shutdown():
