@@ -19,19 +19,23 @@ load_dotenv()
 from huggingface_hub import InferenceClient
 import os
 
-hf_client = InferenceClient(
-    provider="hf-inference",
-    api_key=os.getenv("HF_API_KEY")
-)
+hf_client = InferenceClient(token=os.getenv("HF_API_KEY"))
 
-def llama_chat(messages, temperature=0.4):
-    result = hf_client.chat.completions.create(
-        model="meta-llama/Meta-Llama-3-8B-Instruct",
+def llama_chat(messages, temperature=0.4, model_name="meta-llama/Meta-Llama-3-8B-Instruct"):
+    result = hf_client.chat_completion(
+        model=model_name,
         messages=messages,
         max_tokens=300,
         temperature=temperature
     )
-    return result.choices[0].message.content
+
+    try:
+        return result.choices[0].message.content
+    except Exception:
+        try:
+            return result["choices"][0]["message"]["content"]
+        except Exception:
+            return str(result)
 
 
 import os
@@ -48,6 +52,14 @@ from sqlalchemy.orm import relationship
 
 # --- Import the new router ---
 from consult import router as consult_router
+
+# Try to include the diet router so frontend calls to /diet/* are handled
+try:
+    from diet.routes import router as diet_router
+    app_include_diet = True
+except Exception as _ex:
+    diet_router = None
+    app_include_diet = False
 
 class Professional(Base):
     __tablename__ = "professionals"
@@ -181,7 +193,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = datetime.utcnow() + timedelta(hours=12)
 
-pinecone_api_key = "pcsk_5D1v7g_MTTv3ZifoaK9ffLM5kZMyuL3HN2Kjc6jWDjjt6jHdWFqftdFHdc2AyfHBqXTKqQ"
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
 cloud_region = "us-east-1"
 embedding_dimension = 384
 index_name = "flow-384"
@@ -744,6 +756,13 @@ from recom.backend.routes.recommendations import router as rec_router
 
 app.include_router(rec_router)
 app.include_router(consult_router)
+
+# include diet router if present
+if app_include_diet and diet_router is not None:
+    try:
+        app.include_router(diet_router)
+    except Exception as ex:
+        print("⚠️ Failed to include diet router:", ex)
 
 from excoach.routes import router as exercise_router
 app.include_router(exercise_router)

@@ -27,6 +27,7 @@ export default function Recom() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchRecs = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
