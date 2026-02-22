@@ -92,9 +92,9 @@ function ChatbotPage() {
     setInput('');
     setLoading(true);
 
-    // AbortController gives a 60-second timeout before showing error
+    // AbortController gives a 90-second timeout (HF cold starts can take ~45s)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/query`, {

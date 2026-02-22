@@ -19,17 +19,22 @@ import os
 
 hf_client = InferenceClient(
     model="meta-llama/Meta-Llama-3-8B-Instruct",
-    token=os.getenv("HF_API_KEY")
+    token=os.getenv("HF_API_KEY"),
+    timeout=45,  # fail fast instead of hanging forever
 )
 
 def llama_chat(messages, temperature=0.4):
-    result = hf_client.chat_completion(
-        model="meta-llama/Meta-Llama-3-8B-Instruct",
-        messages=messages,
-        max_tokens=300,
-        temperature=temperature
-    )
-    return result["choices"][0]["message"]["content"]
+    try:
+        result = hf_client.chat_completion(
+            model="meta-llama/Meta-Llama-3-8B-Instruct",
+            messages=messages,
+            max_tokens=300,
+            temperature=temperature
+        )
+        return result["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"❌ LLM call failed: {e}")
+        raise
 
 
 import os
@@ -251,6 +256,11 @@ async def startup():
     await database.connect()
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
+    # Warm up the embedding model so the first /query request doesn't pay the load penalty
+    import asyncio
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _get_embedding_model)
+    print("✅ Embedding model warmed up")
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -454,7 +464,7 @@ async def handle_query(payload: QueryPayload, background_tasks: BackgroundTasks,
 
         loop = asyncio.get_event_loop()
 
-        # 1. Sentiment is fast (local model), run directly
+        # 1. Sentiment (fast, TextBlob, no network)
         sentiment = analyze_sentiment_transformers(query)
 
         # 2. Build instructions
@@ -468,22 +478,20 @@ async def handle_query(payload: QueryPayload, background_tasks: BackgroundTasks,
         interaction_count = await database.fetch_val(query=interaction_count_query, values={"username": username})
 
         if interaction_count <= 10:
-            sentiment_instruction += (
-                " Ask one gentle question about their lifestyle or stress relief habits."
-            )
+            sentiment_instruction += " Ask one gentle question about their lifestyle or stress relief habits."
 
         instructions = (
             f"You are Aarohi, a compassionate mental health assistant. "
             f"Tone: {sentiment}.\n{sentiment_instruction}"
         )
 
-        # 3. Fetch conversation history (fast DB call)
-        conversation_history = await get_conversation_history(username, limit=6)
+        # 3. Fetch conversation history AND Pinecone context IN PARALLEL
+        conversation_history, retrieved_context = await asyncio.gather(
+            get_conversation_history(username, limit=6),
+            loop.run_in_executor(None, search_similar_text, query),
+        )
 
-        # 4. Pinecone search in thread (sync call, don't block event loop)
-        retrieved_context = await loop.run_in_executor(None, search_similar_text, query)
-
-        # 5. Build messages and call LLM (single blocking call, run in thread)
+        # 4. Build messages and call LLM
         messages = [{"role": "system", "content": instructions}]
         messages.extend(conversation_history)
         messages.append({
@@ -493,7 +501,7 @@ async def handle_query(payload: QueryPayload, background_tasks: BackgroundTasks,
 
         response_text = await loop.run_in_executor(None, lambda: llama_chat(messages))
 
-        # 6. Save to DB and extract preferences IN THE BACKGROUND after responding
+        # 5. Save to DB and extract preferences IN THE BACKGROUND after responding
         background_tasks.add_task(
             _save_interaction_background,
             username, query, response_text, conversation_history
