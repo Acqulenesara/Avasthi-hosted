@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import numpy as np
 import pandas as pd
 import pickle
-import tensorflow as tf
+# tensorflow is imported lazily inside load_assets() to avoid ~300MB memory at startup
 from pathlib import Path
 
 router = APIRouter(prefix="/diet", tags=["Diet Recommendation"])
@@ -29,6 +29,7 @@ _df = None
 def load_assets():
     global _model, _scaler, _cliques, _config, _df
     if _model is None:
+        import tensorflow as tf
         _model = tf.keras.models.load_model(
             MODEL_PATH / "main_diet_model.h5", compile=False
         )

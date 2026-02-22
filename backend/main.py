@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 import nltk
 from fastapi.middleware.cors import CORSMiddleware
-from transformers import pipeline
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
@@ -15,7 +14,6 @@ from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
 load_dotenv()
 
-# from recommender.rec_inference import Recommender, PG
 from huggingface_hub import InferenceClient
 import os
 
@@ -288,42 +286,36 @@ class QueryPayload(BaseModel):
     language: str = "en-US"  # optional, sent by frontend
 
 
-# Load the sentiment analysis model from NLP Town
-sentiment_pipeline = pipeline(
-    "sentiment-analysis",
-    model="nlptown/bert-base-multilingual-uncased-sentiment",
-    framework="pt"
-)
+# ── Lazy SentenceTransformer ──────────────────────────────────────
+_embedding_model = None
 
+def _get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    return _embedding_model
 
-
-# Function to analyze sentiment
-def analyze_sentiment_transformers(text):
-    result = sentiment_pipeline(text)[0]
-    label = result['label']  # e.g., '4 stars'
-    rating = int(label.split()[0])  # extract the number from 'X stars'
-
-    # You can customize the label to your format (e.g., positive, neutral, negative)
-    if rating >= 4:
-        return "positive"
-    elif rating == 3:
-        return "neutral"
-    else:
-        return "negative"
-
-from sentence_transformers import SentenceTransformer
-
-embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-
-# Replace get_embedding with OpenAI Embedding
+# Replace get_embedding with lazy-loaded model
 def get_embedding(text: str) -> list[float]:
     try:
-        return embedding_model.encode(text).tolist()
+        return _get_embedding_model().encode(text).tolist()
     except Exception as e:
         print("❌ Failed to generate embedding:", e)
         return []
 
-# Function to retrieve similar documents from ChromaDB
+# ── Sentiment via TextBlob (replaces 400MB BERT pipeline) ─────────
+def analyze_sentiment_transformers(text):
+    from textblob import TextBlob
+    polarity = TextBlob(text).sentiment.polarity
+    if polarity > 0.1:
+        return "positive"
+    elif polarity < -0.1:
+        return "negative"
+    else:
+        return "neutral"
+
+# Function to retrieve similar documents from Pinecone
 def search_similar_text(query_text, top_k=5, score_threshold=0.3):
     query_vector = get_embedding(query_text)
 
