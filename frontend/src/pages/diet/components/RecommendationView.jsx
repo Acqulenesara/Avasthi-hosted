@@ -7,22 +7,27 @@ export default function RecommendationView() {
   const { user } = useContext(UserContext);
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("");
   const [error, setError] = useState(null);
-  const [serverStatus, setServerStatus] = useState("warming"); // "warming" | "ready" | "slow"
   const pingDone = useRef(false);
 
-  // Wake up the diet server as soon as this tab is shown
+  // Fire-and-forget wake ping as soon as this tab is shown
   useEffect(() => {
     if (pingDone.current) return;
     pingDone.current = true;
-    wakeDietServer().then((ok) => {
-      setServerStatus(ok ? "ready" : "slow");
-    });
+    wakeDietServer(); // non-blocking
   }, []);
 
   async function getRecommendations() {
     setLoading(true);
     setError(null);
+    setLoadingMsg("🤖 Connecting to diet server...");
+
+    // Update message after 8s so user knows it's a cold start, not a hang
+    const hintTimer = setTimeout(() => {
+      setLoadingMsg("⏳ Server is waking up, this may take ~30s on first load...");
+    }, 8000);
+
     try {
       const data = await recommendDiet(user);
       setMeals(data.recommendations || []);
@@ -30,7 +35,9 @@ export default function RecommendationView() {
       console.error("❌ Diet recommendation error:", err);
       setError(err.message || "Failed to get recommendations. Please try again.");
     } finally {
+      clearTimeout(hintTimer);
       setLoading(false);
+      setLoadingMsg("");
     }
   }
 
@@ -73,18 +80,6 @@ export default function RecommendationView() {
         <h2>🍽️ Generate Your Meal Plan</h2>
         <p>AI-powered nutrition based on your mental wellness goals</p>
 
-        {/* Server warm-up status */}
-        {serverStatus === "warming" && (
-          <p style={{ color: "#888", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-            ⏳ Connecting to diet server...
-          </p>
-        )}
-        {serverStatus === "slow" && (
-          <p style={{ color: "#e8a838", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-            ⚠️ Diet server is slow to respond — first request may take a moment.
-          </p>
-        )}
-
         <button
           className="primary-btn"
           onClick={getRecommendations}
@@ -93,12 +88,14 @@ export default function RecommendationView() {
           {loading ? "Analyzing..." : "Get Meal Plan"}
         </button>
 
-        {loading && (
-          <p className="loading-text">🤖 AI is analyzing your profile...</p>
+        {loading && loadingMsg && (
+          <p style={{ color: "#888", fontSize: "0.85rem", marginTop: "0.75rem" }}>
+            {loadingMsg}
+          </p>
         )}
 
         {error && (
-          <p className="error-text" style={{ color: "red", marginTop: "1rem" }}>
+          <p style={{ color: "red", marginTop: "1rem", fontSize: "0.9rem" }}>
             ⚠️ {error}
           </p>
         )}

@@ -8,7 +8,7 @@ app = FastAPI(title="Flow - Diet Recommendation Service")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # ← replace "*" with your Vercel URL after deployment
-    allow_credentials=True,
+    allow_credentials=False,  # must be False when allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )

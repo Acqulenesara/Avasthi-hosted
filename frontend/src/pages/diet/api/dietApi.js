@@ -3,23 +3,15 @@ const DIET_API_URL =
   process.env.REACT_APP_API_URL ||
   "http://127.0.0.1:8000";
 
-/** Wake-up ping so the diet service is warm before the user hits "Get Meal Plan" */
-export async function wakeDietServer() {
-  for (let i = 0; i < 6; i++) {
-    try {
-      const res = await fetch(`${DIET_API_URL}/`, { method: "GET" });
-      if (res.ok) return true;
-    } catch (_) {
-      /* still cold */
-    }
-    await new Promise((r) => setTimeout(r, 5000));
-  }
-  return false; // best-effort — let the user try anyway
+/** Fire-and-forget ping — just wakes the server, doesn't block anything */
+export function wakeDietServer() {
+  fetch(`${DIET_API_URL}/`, { method: "GET" }).catch(() => {});
 }
 
 export async function recommendDiet(profile, attempt = 1) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 90000);
+  // 60s per attempt — Render cold start + TF model load can take ~40s
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     const res = await fetch(`${DIET_API_URL}/diet/recommend`, {
@@ -39,12 +31,13 @@ export async function recommendDiet(profile, attempt = 1) {
     return res.json();
   } catch (err) {
     clearTimeout(timeoutId);
-    if (attempt < 3) {
-      await new Promise((r) => setTimeout(r, 5000));
+    if (attempt < 4) {
+      // retry up to 3 more times with increasing wait
+      await new Promise((r) => setTimeout(r, attempt * 5000));
       return recommendDiet(profile, attempt + 1);
     }
     if (err.name === "AbortError") {
-      throw new Error("Request timed out after 3 attempts. The diet server may be waking up — please try again.");
+      throw new Error("Diet server is taking too long. Please try again in a moment.");
     }
     throw err;
   }
