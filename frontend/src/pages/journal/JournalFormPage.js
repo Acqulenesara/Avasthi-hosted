@@ -6,8 +6,8 @@ function JournalFormPage() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Clear both token and userId if present
-    localStorage.removeItem('access_token');
+    // Clear token (stored under "token" key by Login.js)
+    localStorage.removeItem('token');
     localStorage.removeItem('userId');
     navigate('/');
   };

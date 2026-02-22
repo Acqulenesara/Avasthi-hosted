@@ -208,7 +208,8 @@ function App() {
 
   // Ping DIET backend on app load separately — it's a different Render service
   useEffect(() => {
-    const dietUrl = process.env.REACT_APP_DIET_API_URL || process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+    const dietUrl = process.env.REACT_APP_DIET_API_URL; // must be explicitly set — no fallback
+    if (!dietUrl) return;
     let cancelled = false;
     const wakeDiet = async () => {
       for (let i = 0; i < 10; i++) {

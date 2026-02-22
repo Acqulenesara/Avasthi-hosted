@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
 from datetime import datetime, timedelta, date
-from sqlalchemy import MetaData, text, Column, Integer, String, create_engine, Boolean, DateTime, ForeignKey, Date
+from sqlalchemy import MetaData, text, Column, Integer, String, Float, create_engine, Boolean, DateTime, ForeignKey, Date
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
@@ -131,7 +131,7 @@ class JournalEntry(Base):
     entry_text = Column(String)
     entry_date = Column(Date)
     mood = Column(String)
-    sentiment = Column(String)
+    sentiment = Column(Float)
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -286,6 +286,19 @@ async def startup():
     await database.connect()
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
+
+    # ── Migrate journal_entry.sentiment from VARCHAR → DOUBLE PRECISION ──
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                ALTER TABLE journal_entry
+                ALTER COLUMN sentiment TYPE DOUBLE PRECISION
+                USING sentiment::DOUBLE PRECISION
+            """))
+            conn.commit()
+            print("✅ journal_entry.sentiment migrated to DOUBLE PRECISION")
+    except Exception:
+        pass  # already numeric, or table doesn't exist yet
 
     try:
         with engine.connect() as conn:
@@ -496,10 +509,10 @@ from journal.sentiment import analyze_emotion
 async def submit_journal(entry_req: JournalEntryRequest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     username = extract_username_from_token(token)
     mood, scores = analyze_emotion(entry_req.entry)
-    sentiment_score = scores[0]["score"]
+    sentiment_score = float(scores[0]["score"])
     journal_entry = JournalEntry(
         username=username, entry_text=entry_req.entry,
-        entry_date=date.today(), mood=mood, sentiment=str(sentiment_score)
+        entry_date=date.today(), mood=mood, sentiment=sentiment_score
     )
     db.add(journal_entry)
     db.commit()
@@ -510,7 +523,7 @@ async def submit_journal(entry_req: JournalEntryRequest, token: str = Depends(oa
 async def get_journal_entries(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     username = extract_username_from_token(token)
     entries = db.query(JournalEntry).filter(JournalEntry.username == username).order_by(JournalEntry.entry_date.desc()).limit(5).all()
-    return [{"entry_text": e.entry_text, "entry_date": str(e.entry_date), "mood": e.mood, "sentiment": float(e.sentiment)} for e in entries]
+    return [{"entry_text": e.entry_text, "entry_date": str(e.entry_date), "mood": e.mood, "sentiment": float(e.sentiment) if e.sentiment is not None else 0.0} for e in entries]
 
 # ── Include routers ───────────────────────────────────────────────
 from recom.backend.routes.recommendations import router as rec_router
@@ -525,4 +538,3 @@ if app_include_diet and diet_router is not None:
         app.include_router(diet_router)
     except Exception as ex:
         print("⚠️ Failed to include diet router:", ex)
-
