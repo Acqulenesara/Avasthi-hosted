@@ -188,23 +188,39 @@ function HomePage() {
 function App() {
   const [, setToken] = useState(localStorage.getItem("token") || "");
 
-  // Ping backend on app load to wake up Render free tier — retry until alive
+  // Ping MAIN backend on app load to wake up Render free tier — retry until alive
   useEffect(() => {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
     let cancelled = false;
-
     const wakeUp = async () => {
       for (let i = 0; i < 10; i++) {
         if (cancelled) return;
         try {
           const res = await fetch(`${apiUrl}/`, { method: 'GET' });
-          if (res.ok) return; // server is alive — stop pinging
+          if (res.ok) return;
         } catch (_) { /* still cold */ }
-        await new Promise((r) => setTimeout(r, 5000)); // wait 5s before next ping
+        await new Promise((r) => setTimeout(r, 5000));
       }
     };
-
     wakeUp();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Ping DIET backend on app load separately — it's a different Render service
+  useEffect(() => {
+    const dietUrl = process.env.REACT_APP_DIET_API_URL || process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+    let cancelled = false;
+    const wakeDiet = async () => {
+      for (let i = 0; i < 10; i++) {
+        if (cancelled) return;
+        try {
+          const res = await fetch(`${dietUrl}/`, { method: 'GET' });
+          if (res.ok) return;
+        } catch (_) { /* still cold */ }
+        await new Promise((r) => setTimeout(r, 5000));
+      }
+    };
+    wakeDiet();
     return () => { cancelled = true; };
   }, []);
 
