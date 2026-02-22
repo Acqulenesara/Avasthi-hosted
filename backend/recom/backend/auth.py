@@ -1,6 +1,10 @@
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from .models import User
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException
+from jose import jwt, JWTError
+from .settings import get_settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -19,11 +23,6 @@ def authenticate_user(db: Session, username: str, password: str):
         return None
     return user
 
-# auth.py
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
-from .settings import get_settings
-
 settings = get_settings()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # your login route
@@ -31,7 +30,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # your login route
 def extract_username_from_token(token: str) -> str:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        return payload.get("sub")  # assuming username is stored in 'sub'
-    except Exception:
-        return None
-
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(status_code=401, detail="Token missing subject")
+        return username
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")

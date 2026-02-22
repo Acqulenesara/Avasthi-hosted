@@ -56,12 +56,20 @@ def build_rationale(title, kg):
 
 # ── Lazy CONTEXT_MODEL ────────────────────────────────────────────
 _context_model = None
+_context_model_failed = False  # don't retry if it already failed once
 
 def _get_context_model():
-    global _context_model
+    global _context_model, _context_model_failed
+    if _context_model_failed:
+        return None
     if _context_model is None:
-        from sentence_transformers import SentenceTransformer
-        _context_model = SentenceTransformer('all-MiniLM-L6-v2')
+        try:
+            from sentence_transformers import SentenceTransformer
+            _context_model = SentenceTransformer('all-MiniLM-L6-v2')
+        except Exception as e:
+            print(f"⚠️ SentenceTransformer load failed (short-term signal disabled): {e}")
+            _context_model_failed = True
+            return None
     return _context_model
 
 
@@ -87,9 +95,15 @@ def create_feedback_vector(feedback: dict, embeddings: dict, dim: int) -> np.nda
 def create_short_term_intention_vector(messages: list) -> np.ndarray:
     if not messages:
         return None
-    full_context_text = ". ".join(messages)
-    vec = _get_context_model().encode(full_context_text)
-    return vec
+    model = _get_context_model()
+    if model is None:
+        return None  # graceful fallback — weight redistributed to long-term
+    try:
+        full_context_text = ". ".join(messages)
+        return model.encode(full_context_text)
+    except Exception as e:
+        print(f"⚠️ Short-term vector encoding failed: {e}")
+        return None
 
 
 
@@ -126,8 +140,8 @@ def recommend_activities(
         feedback_vec = create_feedback_vector(feedback, title_to_emb, embed_dim)
         short_term_vec = create_short_term_intention_vector(recent_messages)
 
-        # Build long-term vector: liked preferences push toward similar activities,
-        # disliked preferences push away
+        # Build long-term vector using keyword embeddings if model available,
+        # otherwise fall back to the mean of all activity embeddings
         liked_keywords = [c for pref_type, contents in long_term_prefs.items()
                           for c in (contents if isinstance(contents, list) else [contents])
                           if pref_type in ("like", "modality", "activity")]
@@ -136,14 +150,22 @@ def recommend_activities(
                              for c in (contents if isinstance(contents, list) else [contents])
                              if pref_type == "dislike"]
 
-        if liked_keywords:
-            liked_vec = _get_context_model().encode(" ".join(liked_keywords))
+        model = _get_context_model()  # may be None if import failed
+
+        if liked_keywords and model is not None:
+            try:
+                liked_vec = model.encode(" ".join(liked_keywords))
+            except Exception:
+                liked_vec = np.mean(list(title_to_emb.values()), axis=0)
         else:
             liked_vec = np.mean(list(title_to_emb.values()), axis=0)
 
-        if disliked_keywords:
-            disliked_vec = _get_context_model().encode(" ".join(disliked_keywords))
-            long_term_vec = liked_vec - 0.4 * disliked_vec
+        if disliked_keywords and model is not None:
+            try:
+                disliked_vec = model.encode(" ".join(disliked_keywords))
+                long_term_vec = liked_vec - 0.4 * disliked_vec
+            except Exception:
+                long_term_vec = liked_vec
         else:
             long_term_vec = liked_vec
 

@@ -140,3 +140,43 @@ load_dotenv('backend/.env')
 load_dotenv('backend/recom/.env')
 pg = os.environ.get('POSTGRES_URL', 'NOT SET')
 print("POSTGRES_URL:", pg[:40] + "..." if len(pg) > 40 else pg)
+
+print("\n=== Step 9: Test JWT decode with recom auth ===")
+try:
+    # Simulate what main.py does when creating a token
+    import jwt as pyjwt
+    from dotenv import load_dotenv
+    load_dotenv('backend/recom/.env', override=False)
+    SECRET = os.environ.get('SECRET_KEY', '')
+    print(f"SECRET_KEY from env: '{SECRET}'")
+
+    # Create a token the same way main.py does
+    from datetime import datetime, timedelta
+    token = pyjwt.encode({"sub": "testuser", "exp": datetime.utcnow() + timedelta(hours=1)}, SECRET, algorithm="HS256")
+    print(f"Token created: {token[:40]}...")
+
+    # Now decode using the recom auth module
+    from recom.backend.auth import extract_username_from_token
+    username = extract_username_from_token(token)
+    print(f"✅ Decoded username: {username}")
+except Exception as e:
+    traceback.print_exc()
+
+print("\n=== Step 10: Full recommend with real DB for a real user ===")
+try:
+    from recom.backend.database import SessionLocal
+    from recom.backend.recommendations.recommender import recommend_activities
+    db = SessionLocal()
+    # Use a real username from the DB
+    from sqlalchemy import text
+    with db.bind.connect() as conn:
+        row = conn.execute(text("SELECT username FROM users LIMIT 1")).fetchone()
+        real_user = row[0] if row else "testuser"
+    print(f"Testing with real user: {real_user}")
+    recs = recommend_activities(db, real_user, 8)
+    print(f"✅ Got {len(recs)} recommendations")
+    if recs:
+        print(f"Top rec: {recs[0]['title']} (score: {recs[0]['score']})")
+    db.close()
+except Exception as e:
+    traceback.print_exc()
