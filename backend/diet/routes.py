@@ -29,7 +29,13 @@ _df = None
 def load_assets():
     global _model, _scaler, _cliques, _config, _df
     if _model is None:
-        import tensorflow as tf
+        try:
+            import tensorflow as tf
+        except ImportError:
+            raise RuntimeError(
+                "tensorflow is not installed in this environment. "
+                "The diet service runs as a separate deployment."
+            )
         _model = tf.keras.models.load_model(
             MODEL_PATH / "main_diet_model.h5", compile=False
         )

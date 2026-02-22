@@ -16,12 +16,13 @@ bcrypt==4.2.1
 PyJWT==2.10.1
 
 # ── AI / ML ────────────────────────────────────────────────────
-# CPU-only torch (~200MB vs ~2GB for CUDA build) — sufficient for inference
+# CPU-only torch — sufficient for inference, saves ~1.5GB vs CUDA build
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.4.1+cpu
 sentence-transformers==3.3.1
 huggingface_hub>=0.23.0
 # transformers removed — BERT sentiment pipeline replaced with TextBlob
+# tensorflow-cpu removed — diet service has its own requirements.txt
 
 # ── Vector DB ──────────────────────────────────────────────────
 pinecone-client==5.0.1
@@ -29,9 +30,6 @@ pinecone-client==5.0.1
 # ── NLP ────────────────────────────────────────────────────────
 nltk==3.9.1
 textblob==0.18.0
-
-# ── Diet ML (tensorflow — lazy-loaded, only used on /diet/recommend) ──
-tensorflow-cpu==2.17.0
 
 # ── Exercise ML ────────────────────────────────────────────────
 scikit-learn==1.6.0
