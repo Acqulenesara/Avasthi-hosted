@@ -21,8 +21,7 @@ import os
 
 hf_client = InferenceClient(
     model="meta-llama/Meta-Llama-3-8B-Instruct",
-    token=os.getenv("HF_API_KEY"),
-    base_url="https://router.huggingface.co"
+    token=os.getenv("HF_API_KEY")
 )
 
 def llama_chat(messages, temperature=0.4):
