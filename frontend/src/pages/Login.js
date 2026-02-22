@@ -8,6 +8,8 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,12 +23,33 @@ const Login = () => {
       return;
     }
 
+    setLoading(true);
+    setStatusMsg("Connecting to server...");
+
+    const controller = new AbortController();
+    // 30s timeout — if backend is cold it wakes up within ~20s
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 30000);
+
+    // Show a "still waking up" hint after 5s
+    const hintId = setTimeout(() => {
+      setStatusMsg("Server is waking up, please wait...");
+    }, 5000);
+
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'}/token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ username, password }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/token`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ username, password }),
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeoutId);
+      clearTimeout(hintId);
 
       const data = await response.json();
       console.log("API Response:", data);
@@ -44,11 +67,21 @@ const Login = () => {
           navigate("/"); // fallback to home page
         }
       } else {
-        alert(`❌ Login Failed: ${data.detail || "Unknown error"}`);
+        setStatusMsg("");
+        alert(`❌ Login Failed: ${data.detail || "Incorrect username or password"}`);
       }
     } catch (error) {
+      clearTimeout(timeoutId);
+      clearTimeout(hintId);
+      if (error.name === "AbortError") {
+        alert("⏱️ Login timed out. The server may be starting up — please try again in a moment.");
+      } else {
+        alert("⚠️ Something went wrong. Check your connection and try again.");
+      }
       console.error("Login Error:", error);
-      alert("⚠️ Something went wrong. Try again later.");
+    } finally {
+      setLoading(false);
+      setStatusMsg("");
     }
   };
 
@@ -74,6 +107,8 @@ const Login = () => {
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            disabled={loading}
+            onKeyPress={(e) => e.key === "Enter" && !loading && handleLogin()}
           />
 
           <div className="password-container">
@@ -82,18 +117,32 @@ const Login = () => {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              onKeyPress={(e) => e.key === "Enter" && !loading && handleLogin()}
             />
             <button
               onClick={() => setShowPassword(!showPassword)}
               type="button"
               className="show-btn"
+              disabled={loading}
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
 
-          <button onClick={handleLogin} className="login-btn">
-            LOGIN
+          {statusMsg && (
+            <p className="status-msg" style={{ color: "#888", fontSize: "0.85rem", margin: "6px 0" }}>
+              {statusMsg}
+            </p>
+          )}
+
+          <button
+            onClick={handleLogin}
+            className="login-btn"
+            disabled={loading}
+            style={{ opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+          >
+            {loading ? "Logging in..." : "LOGIN"}
           </button>
 
           <p>

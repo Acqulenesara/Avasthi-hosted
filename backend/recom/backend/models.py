@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy.schema import UniqueConstraint
 from datetime import datetime
 from .database import Base
 from pydantic import BaseModel
@@ -14,14 +15,17 @@ class Feedback(Base):
     liked = Column(Boolean)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+    __table_args__ = (
+        UniqueConstraint('username', 'activity_title', name='uix_feedback_user_activity'),
+    )
+
 class RecommendationRequest(BaseModel):
     username: str
     top_k: int = 5
     modality: Optional[str] = None
 
 class FeedbackRequest(BaseModel):
-    username: str
-    activity_title: str
+    activity_title: str   # username comes from JWT, not body
     liked: bool
 
 
@@ -41,7 +45,7 @@ class ChatInteraction(Base):
     query = Column(String)
     response = Column(String)
     scenario = Column(String, nullable=True)
-    timestamp = Column(String, default=datetime.utcnow().isoformat)
+    timestamp = Column(DateTime, default=datetime.utcnow)  # DateTime so ORDER BY works correctly
 
 # Add to SQLAlchemy models
 from sqlalchemy.schema import UniqueConstraint
@@ -55,4 +59,3 @@ class UserPreference(Base):
 
     __table_args__ = (UniqueConstraint('username', 'preference_type', 'content', name='uix_user_pref'),)
        # e.g., yoga, music, solitude
-

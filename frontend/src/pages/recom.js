@@ -70,9 +70,9 @@ export default function Recom() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ username, activity_title, liked }),
+        body: JSON.stringify({ activity_title, liked }),  // username comes from JWT on server
       });
-      fetchRecs(); // refresh recommendations
+      fetchRecs(); // refresh recommendations after feedback
     } catch (err) {
       console.error("❌ Error saving feedback:", err);
     }

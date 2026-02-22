@@ -120,21 +120,32 @@ def recommend_activities(
         recent_messages = get_recent_interactions(db, username) if use_short_term else []
         feedback = get_user_feedback_from_db(db, username) if use_feedback else {}
 
+        print(f"📊 [{username}] prefs={len(long_term_prefs)} msgs={len(recent_messages)} feedback={len(feedback)}")
+
         # Create a vector for each signal
         feedback_vec = create_feedback_vector(feedback, title_to_emb, embed_dim)
         short_term_vec = create_short_term_intention_vector(recent_messages)
 
-        # Build long-term vector from liked preference keywords matched to activity titles/descriptions
+        # Build long-term vector: liked preferences push toward similar activities,
+        # disliked preferences push away
         liked_keywords = [c for pref_type, contents in long_term_prefs.items()
                           for c in (contents if isinstance(contents, list) else [contents])
                           if pref_type in ("like", "modality", "activity")]
 
+        disliked_keywords = [c for pref_type, contents in long_term_prefs.items()
+                             for c in (contents if isinstance(contents, list) else [contents])
+                             if pref_type == "dislike"]
+
         if liked_keywords:
-            keyword_text = " ".join(liked_keywords)
-            long_term_vec = _get_context_model().encode(keyword_text)
+            liked_vec = _get_context_model().encode(" ".join(liked_keywords))
         else:
-            # Fall back: average all activity embeddings (neutral prior)
-            long_term_vec = np.mean(list(title_to_emb.values()), axis=0)
+            liked_vec = np.mean(list(title_to_emb.values()), axis=0)
+
+        if disliked_keywords:
+            disliked_vec = _get_context_model().encode(" ".join(disliked_keywords))
+            long_term_vec = liked_vec - 0.4 * disliked_vec
+        else:
+            long_term_vec = liked_vec
 
         # --- Normalise every signal before fusing ---
         def safe_norm(v):
@@ -142,12 +153,11 @@ def recommend_activities(
             return v / n if n > 0 else v
 
         long_term_vec = safe_norm(long_term_vec)
-        feedback_vec  = safe_norm(feedback_vec)  if np.linalg.norm(feedback_vec) > 0 else feedback_vec
+        feedback_vec  = safe_norm(feedback_vec) if np.linalg.norm(feedback_vec) > 0 else feedback_vec
 
         w_lt, w_st, w_fb = W_LONG_TERM, W_SHORT_TERM, W_FEEDBACK
 
         if short_term_vec is None:
-            # Redistribute short-term weight to long-term
             w_lt += w_st
             w_st  = 0.0
             short_term_vec = np.zeros(embed_dim)
@@ -158,11 +168,22 @@ def recommend_activities(
         fused_vector = safe_norm(fused_vector)
 
         # Score every activity with cosine similarity
+        # then apply direct boost/penalty for explicit feedback
+        liked_titles    = {t for t, v in feedback.items() if v is True}
+        disliked_titles = {t for t, v in feedback.items() if v is False}
+
         results = []
         for title, embedding in title_to_emb.items():
             if title not in activity_map:
                 continue
             sim = float(np.dot(fused_vector, safe_norm(embedding)))
+
+            # Direct per-activity adjustments from explicit feedback
+            if title in liked_titles:
+                sim += 0.15       # boost liked activities to the top
+            elif title in disliked_titles:
+                sim -= 0.30       # strongly push disliked activities down
+
             activity_details = activity_map[title]
             results.append({
                 "title": title,
@@ -173,8 +194,9 @@ def recommend_activities(
             })
 
         results.sort(key=lambda x: x["score"], reverse=True)
-        return results[:top_k]
-
+        top = results[:top_k]
+        print(f"✅ [{username}] top recs: {[r['title'] for r in top]}")
+        return top
     except Exception as e:
         print(f"💥 recommend_activities error for '{username}': {e}")
         print(traceback.format_exc())

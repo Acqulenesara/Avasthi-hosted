@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
 from datetime import datetime, timedelta
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from databases import Database
@@ -256,6 +256,22 @@ async def startup():
     await database.connect()
     nltk.download("punkt", quiet=True)
     nltk.download("punkt_tab", quiet=True)
+
+    # Migrate: add unique constraint on feedback table if it doesn't exist yet
+    # (create_all won't alter an already-existing table)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                ALTER TABLE feedback
+                ADD CONSTRAINT uix_feedback_user_activity
+                UNIQUE (username, activity_title)
+            """))
+            conn.commit()
+            print("✅ feedback unique constraint created")
+    except Exception as e:
+        # Constraint already exists — that's fine
+        print(f"ℹ️ feedback constraint already exists or table missing: {e}")
+
     # Warm up the embedding model so the first /query request doesn't pay the load penalty
     import asyncio
     loop = asyncio.get_event_loop()
@@ -625,30 +641,28 @@ async def save_feedback(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme)
 ):
-    username = extract_username_from_token(token)
+    username = extract_username_from_token(token)  # always from JWT, never from body
 
     from sqlalchemy import text
 
     insert_stmt = text("""
     INSERT INTO feedback (username, activity_title, liked, timestamp)
     VALUES (:username, :activity_title, :liked, :timestamp)
-    ON CONFLICT (username, activity_title)
+    ON CONFLICT ON CONSTRAINT uix_feedback_user_activity
     DO UPDATE SET liked = EXCLUDED.liked, timestamp = EXCLUDED.timestamp
     """)
 
 
-    params = {
+    db.execute(insert_stmt, {
         "username": username,
         "activity_title": feedback.activity_title,
         "liked": feedback.liked,
         "timestamp": datetime.utcnow()
-    }
-
-    db.execute(insert_stmt, params)
+    })
     db.commit()
 
     return {
-        "message": "Feedback saved via raw SQL",
+        "message": "Feedback saved",
         "username": username,
         "activity": feedback.activity_title,
         "liked": feedback.liked

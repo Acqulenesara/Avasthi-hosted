@@ -34,12 +34,11 @@ def get_recent_interactions(db: Session, username: str, limit: int = 5) -> List[
     interactions = (
         db.query(ChatInteraction)
         .filter(ChatInteraction.username == username)
-        .order_by(ChatInteraction.timestamp.desc())
+        .order_by(ChatInteraction.timestamp.desc())  # DateTime column sorts correctly
         .limit(limit)
         .all()
     )
-    # Return just the user's messages for context
-    return [i.query for i in interactions]
+    return [i.query for i in interactions if i.query]
 
 def get_user_feedback_from_db(db: Session, username: str) -> Dict[str, bool]:
     """
