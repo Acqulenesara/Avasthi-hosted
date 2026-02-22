@@ -19,23 +19,20 @@ load_dotenv()
 from huggingface_hub import InferenceClient
 import os
 
-hf_client = InferenceClient(token=os.getenv("HF_API_KEY"))
 
-def llama_chat(messages, temperature=0.4, model_name="meta-llama/Meta-Llama-3-8B-Instruct"):
+hf_client = InferenceClient(
+    "meta-llama/Meta-Llama-3-8B-Instruct",
+    token=os.getenv("HF_API_KEY")
+)
+
+def llama_chat(messages, temperature=0.4):
     result = hf_client.chat_completion(
-        model=model_name,
+        model="meta-llama/Meta-Llama-3-8B-Instruct",
         messages=messages,
         max_tokens=300,
         temperature=temperature
     )
-
-    try:
-        return result.choices[0].message.content
-    except Exception:
-        try:
-            return result["choices"][0]["message"]["content"]
-        except Exception:
-            return str(result)
+    return result["choices"][0]["message"]["content"]
 
 
 import os
