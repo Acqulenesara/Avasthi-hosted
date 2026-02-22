@@ -140,9 +140,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create tables (you can also run Alembic migrations)
 Base.metadata.create_all(bind=engine)
 
+# NLTK data downloaded in startup event, not at import time
 
 # Download necessary NLTK data
-nltk.download("punkt")
+# nltk.download("punkt")
 
 # from dotenv import load_dotenv
 # load_dotenv()  # Load environment variables
@@ -248,6 +249,8 @@ class UserRegister(BaseModel):
 @app.on_event("startup")
 async def startup():
     await database.connect()
+    nltk.download("punkt", quiet=True)
+    nltk.download("punkt_tab", quiet=True)
 
 @app.on_event("shutdown")
 async def shutdown():

@@ -2,7 +2,7 @@
 
 import numpy as np
 from sqlalchemy.orm import Session
-from sentence_transformers import SentenceTransformer
+# SentenceTransformer is lazy-loaded to avoid blocking startup
 import traceback
 import csv
 from pathlib import Path
@@ -54,7 +54,17 @@ def build_rationale(title, kg):
     return format_rationale("; ".join(rationale_parts))
 
 
-CONTEXT_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+# ── Lazy CONTEXT_MODEL ────────────────────────────────────────────
+_context_model = None
+
+def _get_context_model():
+    global _context_model
+    if _context_model is None:
+        from sentence_transformers import SentenceTransformer
+        _context_model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _context_model
+
+
 # --- NEW, TUNED WEIGHTS ---
 W_LONG_TERM = 0.15
 W_SHORT_TERM = 0.55 # Reduced from 0.5
@@ -78,7 +88,7 @@ def create_short_term_intention_vector(messages: list) -> np.ndarray:
     if not messages:
         return None
     full_context_text = ". ".join(messages)
-    vec = CONTEXT_MODEL.encode(full_context_text)
+    vec = _get_context_model().encode(full_context_text)
     return vec
 
 
@@ -121,7 +131,7 @@ def recommend_activities(
 
         if liked_keywords:
             keyword_text = " ".join(liked_keywords)
-            long_term_vec = CONTEXT_MODEL.encode(keyword_text)
+            long_term_vec = _get_context_model().encode(keyword_text)
         else:
             # Fall back: average all activity embeddings (neutral prior)
             long_term_vec = np.mean(list(title_to_emb.values()), axis=0)
