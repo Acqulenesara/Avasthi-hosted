@@ -2,7 +2,8 @@ from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# override=False means real environment variables (set by Render) always win over .env
+load_dotenv(override=False)
 
 class Settings(BaseModel):
     SECRET_KEY: str

@@ -6,7 +6,7 @@ import httpx
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=False)  # never overwrite env vars already set by Render
 WHEREBY_API_KEY = os.getenv("WHEREBY_API_KEY")
 WHEREBY_API_URL = "https://api.whereby.dev/v1/meetings"
 # --- Import from your new modules ---

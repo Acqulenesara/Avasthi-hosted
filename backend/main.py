@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from databases import Database
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=False)  # never overwrite env vars already set by Render
 
 from huggingface_hub import InferenceClient
 import os
@@ -139,7 +139,14 @@ class UserPreference(Base):
 
 # Use databases for async DB interaction
 database = Database(DATABASE_URL)
-engine = create_engine(DATABASE_URL.replace("asyncpg", "psycopg2").split("?")[0])
+
+# Normalize driver for sync SQLAlchemy engine
+_sync_url = (DATABASE_URL
+             .replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+             .replace("postgresql://", "postgresql+psycopg2://")
+             .split("?")[0])
+_ssl_args = {"sslmode": "require"} if ("neon.tech" in DATABASE_URL or "sslmode=require" in DATABASE_URL) else {}
+engine = create_engine(_sync_url, connect_args=_ssl_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create tables (you can also run Alembic migrations)
