@@ -19,10 +19,10 @@ load_dotenv()
 from huggingface_hub import InferenceClient
 import os
 
-
 hf_client = InferenceClient(
-    "meta-llama/Meta-Llama-3-8B-Instruct",
-    token=os.getenv("HF_API_KEY")
+    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    token=os.getenv("HF_API_KEY"),
+    base_url="https://router.huggingface.co"
 )
 
 def llama_chat(messages, temperature=0.4):
